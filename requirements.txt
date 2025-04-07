@@ -10,3 +10,6 @@ torch==2.6.0
 tqdm==4.67.1
 visdom==0.2.4
 xlrd==2.0.1
+rasterio
+matplotlib
+spectral
