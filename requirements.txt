@@ -1,0 +1,12 @@
+dominate==2.9.1
+einops==0.8.1
+hues==0.2.2
+numpy==2.2.4
+Pillow==11.1.0
+scikit_learn==1.6.1
+scipy==1.15.2
+sewar==0.4.6
+torch==2.6.0
+tqdm==4.67.1
+visdom==0.2.4
+xlrd==2.0.1

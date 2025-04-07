@@ -182,7 +182,7 @@ class Dataset(data.Dataset):
                 h, w, sp_matrix.shape[1]
             )
         else:
-            raise Exception("The shape of sp matrix doesnot match the image")
+            raise Exception("The shape of sp matrix does not match the image")
         # np.random.seed(10)
         # SNRm = 35
         # sigmam = np.math.sqrt(np.sum(img_msi) ** 2) / (10 ** (SNRm / 10)) / np.size(img_msi)
