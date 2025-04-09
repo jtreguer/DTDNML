@@ -25,6 +25,8 @@ class Dataset(data.Dataset):
         data_folder = os.path.join(default_datapath, args.data_name)
         if os.path.exists(data_folder):
             for root, dirs, files in os.walk(data_folder):
+                print(files)
+                print(args.mat_name)
                 if args.mat_name in files:
                     raise Exception("HSI data path does not exist!")
                 else:
@@ -32,9 +34,12 @@ class Dataset(data.Dataset):
         else:
             return 0
 
+        print(data_path)
+
         self.imgpath_list = sorted(glob.glob(data_path))
         self.img_list = []
         for i in range(len(self.imgpath_list)):
+            # loadmat expects Matlab format matrices .mat
             self.img_list.append(io.loadmat(self.imgpath_list[i])["img"]) # [0:96,0:96,:]
             # self.img_list.append(io.loadmat(self.imgpath_list[i])["HSI"]) # CAVE
 
@@ -59,6 +64,7 @@ class Dataset(data.Dataset):
                 int(r_w / 2) : w - (r_w - int(r_w / 2)),
                 :,
             ]
+            # Normalization of patch
             img_patch = (img_patch - np.min(img_patch)) / (np.max(img_patch) - np.min(img_patch))
             self.img_patch_list.append(img_patch)
             "LrHSI"
