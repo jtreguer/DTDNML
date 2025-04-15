@@ -12,6 +12,10 @@ from sklearn.cluster import KMeans
 
 
 class Dataset(data.Dataset):
+
+    
+    patch_size = 64
+    
     def __init__(self, args, sp_matrix, isTrain=True):
         super(Dataset, self).__init__()
 
@@ -22,32 +26,40 @@ class Dataset(data.Dataset):
         self.isTrain = isTrain
 
         default_datapath = os.getcwd()
-        data_folder = os.path.join(default_datapath, args.data_name)
+        data_folder = os.path.join(default_datapath, args.data_path_name)
+
+        self.img_path_list = []
+
         if os.path.exists(data_folder):
-            for root, dirs, files in os.walk(data_folder):
-                print(files)
-                print(args.mat_name)
-                if args.mat_name in files:
-                    raise Exception("HSI data path does not exist!")
-                else:
-                    data_path = os.path.join(data_folder, args.mat_name + ".mat")
+            for file in os.listdir(data_folder):
+                if file.endswith('.img'):
+                    self.img_path_list.append(file)
+        
+               # for root, dirs, files in os.walk(data_folder):
+            #     print(files)
+            #     print(args.mat_name)
+            #     print(args.mat_name in files)
+            #     if args.mat_name in files:
+            #         raise Exception("HSI data path does not exist!")
+            #     else:
+            #         data_path = os.path.join(data_folder, args.mat_name + ".mat")
         else:
-            return 0
+            return None
 
-        print(data_path)
+        print(self.img_path_list)
+        # print(data_path)
 
-        self.imgpath_list = sorted(glob.glob(data_path))
+        # self.imgpath_list = sorted(glob.glob(data_path))
+        # print(self.imgpath_list)
         self.img_list = []
-        for i in range(len(self.imgpath_list)):
-            # loadmat expects Matlab format matrices .mat
-            self.img_list.append(io.loadmat(self.imgpath_list[i])["img"]) # [0:96,0:96,:]
-            # self.img_list.append(io.loadmat(self.imgpath_list[i])["HSI"]) # CAVE
+        # for i in range(len(self.imgpath_list)):
+        #     # loadmat expects Matlab format matrices .mat
+        #     self.img_list.append(io.loadmat(self.imgpath_list[i])["img"]) # [0:96,0:96,:]
+        #     # self.img_list.append(io.loadmat(self.imgpath_list[i])["HSI"]) # CAVE
 
         "for single HSI"
         (_, _, self.hsi_channels) = self.img_list[0].shape
 
-        "number of patches"
-        patch_size = 64
 
         "generate simulated data"
         self.img_patch_list = []
