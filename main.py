@@ -50,10 +50,10 @@ if __name__ == "__main__":
 
     """Sandiego"""
     train_opt.name = 'sandiego_scale_8'
-    train_opt.data_name = "sandiego"
-    train_opt.srf_name = "sandiego"  # 'Landsat8_BGR'
-    train_opt.mat_name = "Sandiego"
-
+    train_opt.data_path_name = "sandiego"
+    train_opt.data_img_name = "sandiego_ort"
+    train_opt.srf_name = "Landsat8_BGRI_SRF"  # 'Landsat8_BGR'
+    
     """chikusei"""
     # train_opt.name = 'chikusei_scale_8'
     # train_opt.data_name = "chikusei"

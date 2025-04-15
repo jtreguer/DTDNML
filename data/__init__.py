@@ -6,8 +6,9 @@ import numpy as np
 import os
 import torch
 from .dataset import Dataset
+import spectral
 
-def get_spectral_response(data_name, srf_name):
+def get_spectral_responseOLD(data_name, srf_name):
     xls_path = os.path.join(os.getcwd(), data_name, srf_name + '.xls')
     print(xls_path)
     if not os.path.exists(xls_path):
@@ -41,7 +42,10 @@ def get_sp_range(sp_matrix):
 
 class DatasetDataLoader():
     def init(self, arg, isTrain=True):
-        self.sp_matrix = get_spectral_response(arg.data_name, arg.srf_name)
+        header_file = os.path.join(os.getcwd(), arg.data_path_name, arg.data_img_name +'.hdr')
+        header_spectral = spectral.open_image(header_file)
+        self.wavelengths = header_spectral.bands.centers
+        self.sp_matrix = self.get_spectral_response(arg.data_path_name, arg.srf_name)
         self.sp_range = get_sp_range(self.sp_matrix)
         self.dataset = create_dataset(arg, self.sp_matrix, isTrain)
         self.hsi_channels = self.dataset.hsi_channels
@@ -57,6 +61,23 @@ class DatasetDataLoader():
     def __iter__(self):
         for i, data in enumerate(self.dataloader):
             yield data
+
+    def get_spectral_response(self,data_name, srf_name):
+        xls_path = os.path.join(os.getcwd(), data_name, srf_name + '.xls')
+        print(xls_path)
+        if not os.path.exists(xls_path):
+            raise Exception("Spectral response path does not exist!")
+        data = xlrd.open_workbook(xls_path)
+        print(data.sheets())
+        srf = data.sheets()[0]
+        print(srf)
+        srf_arr = np.array([srf.col_values(i) for i in range(srf.ncols)]).T
+        sp_matrix = np.empty((len(self.wavelengths),srf.ncols),dtype=np.float32)
+        for i in range(1,srf.ncols):
+            sp_matrix[:,i] = np.interp(self.wavelengths, srf_arr[:,0], srf_arr[:,i],left=0, right=0)
+        print(sp_matrix.shape)
+        print(sp_matrix[:10,:])
+        return sp_matrix
 
 
 def get_dataloader(arg, isTrain=True):

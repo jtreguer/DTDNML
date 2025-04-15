@@ -4,7 +4,7 @@
 import torch.utils.data as data
 import torch
 import os
-import glob
+import rasterio
 import scipy.io as io
 import numpy as np
 from sklearn.neighbors import kneighbors_graph
@@ -15,7 +15,7 @@ class Dataset(data.Dataset):
 
     
     patch_size = 64
-    
+
     def __init__(self, args, sp_matrix, isTrain=True):
         super(Dataset, self).__init__()
 
@@ -47,11 +47,19 @@ class Dataset(data.Dataset):
             return None
 
         print(self.img_path_list)
-        # print(data_path)
 
-        # self.imgpath_list = sorted(glob.glob(data_path))
-        # print(self.imgpath_list)
         self.img_list = []
+        for file in self.img_path_list:
+            with rasterio.open(file) as src:
+                print("Reading HS data")
+                hyperspectral_data = src.read()
+
+                # Display information about the hyperspectral data
+                print('Shape of hyperspectral data:', hyperspectral_data.shape)
+                print('Number of bands:', src.count)
+                self.img_list.append(hyperspectral_data)
+
+
         # for i in range(len(self.imgpath_list)):
         #     # loadmat expects Matlab format matrices .mat
         #     self.img_list.append(io.loadmat(self.imgpath_list[i])["img"]) # [0:96,0:96,:]
