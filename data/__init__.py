@@ -68,15 +68,12 @@ class DatasetDataLoader():
         if not os.path.exists(xls_path):
             raise Exception("Spectral response path does not exist!")
         data = xlrd.open_workbook(xls_path)
-        print(data.sheets())
         srf = data.sheets()[0]
-        print(srf)
         srf_arr = np.array([srf.col_values(i) for i in range(srf.ncols)]).T
         sp_matrix = np.empty((len(self.wavelengths),srf.ncols),dtype=np.float32)
         for i in range(1,srf.ncols):
             sp_matrix[:,i] = np.interp(self.wavelengths, srf_arr[:,0], srf_arr[:,i],left=0, right=0)
-        print(sp_matrix.shape)
-        print(sp_matrix[:10,:])
+        print(f"sp_matrix.shape {sp_matrix.shape}")
         return sp_matrix
 
 

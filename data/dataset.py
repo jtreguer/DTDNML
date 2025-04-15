@@ -9,13 +9,14 @@ import scipy.io as io
 import numpy as np
 from sklearn.neighbors import kneighbors_graph
 from sklearn.cluster import KMeans
+from einops import rearrange
 
 
 class Dataset(data.Dataset):
 
-    
     patch_size = 64
-
+    SNR = 25
+    
     def __init__(self, args, sp_matrix, isTrain=True):
         super(Dataset, self).__init__()
 
@@ -34,15 +35,6 @@ class Dataset(data.Dataset):
             for file in os.listdir(data_folder):
                 if file.endswith('.img'):
                     self.img_path_list.append(file)
-        
-               # for root, dirs, files in os.walk(data_folder):
-            #     print(files)
-            #     print(args.mat_name)
-            #     print(args.mat_name in files)
-            #     if args.mat_name in files:
-            #         raise Exception("HSI data path does not exist!")
-            #     else:
-            #         data_path = os.path.join(data_folder, args.mat_name + ".mat")
         else:
             return None
 
@@ -50,14 +42,15 @@ class Dataset(data.Dataset):
 
         self.img_list = []
         for file in self.img_path_list:
-            with rasterio.open(file) as src:
+            file_path = os.path.join(os.getcwd(),args.data_path_name,file)
+            with rasterio.open(file_path) as src:
                 print("Reading HS data")
                 hyperspectral_data = src.read()
 
                 # Display information about the hyperspectral data
                 print('Shape of hyperspectral data:', hyperspectral_data.shape)
                 print('Number of bands:', src.count)
-                self.img_list.append(hyperspectral_data)
+                self.img_list.append(rearrange(hyperspectral_data, 'c h w -> h w c'))
 
 
         # for i in range(len(self.imgpath_list)):
@@ -68,12 +61,11 @@ class Dataset(data.Dataset):
         "for single HSI"
         (_, _, self.hsi_channels) = self.img_list[0].shape
 
-
         "generate simulated data"
         self.img_patch_list = []
         self.img_lr_list = []
         self.img_msi_list = []
-        SNR = 25
+
         for i, img in enumerate(self.img_list):
             (h, w, c) = img.shape
             s = self.args.scale_factor
@@ -117,7 +109,10 @@ class Dataset(data.Dataset):
             self.img_msi_list.append(img_msi)
             # io.savemat(r"D:\\Dataset\\MIAE\\MIAE\\data\\pavia\\paviac_data_r80.mat", {'MSI':img_msi,'HSI':img_lr, 'REF':img_patch})
             # io.savemat(r"D:\\Dataset\\MIAE\\MIAE\\data\\pavia\\{}_r80.mat".format("img1"), {'MSI':img_msi,'HSI':img_lr, 'REF':img_patch})
+            print("Dataset initialized")
 
+
+    # UNUSED
     def generate_spatial_manifold(self, clustered_data, msi, sigma_D=900):
         m, n, _ = msi.shape
         # generate the spatial laplacian matrix of MSI
@@ -134,7 +129,7 @@ class Dataset(data.Dataset):
                     ni, nj = idxes[0][idn], idxes[1][idn]
                     idx_manifold_col = ni * m + nj
                     pixel_nij = msi[ni, nj, :]
-                    weight = np.math.exp(-np.sum((pixel_ij - pixel_nij) ** 2) / sigma_D)
+                    weight = np.exp(-np.sum((pixel_ij - pixel_nij) ** 2) / sigma_D)
                     spatial_weights[idx_manifold_row, idx_manifold_col] = weight
         spatial_diag = np.diag(np.sum(spatial_weights, axis=1)) - spatial_weights
         return spatial_diag
@@ -145,7 +140,7 @@ class Dataset(data.Dataset):
         K is for the number of neighbours
         """
         _, p = lrhsi_2d.shape
-        # generate the spectral laplacian matrix of Lr HSI
+        # generate the spectral Laplacian matrix of Lr HSI
         spectral_weights = np.zeros([p, p])
         ka = kneighbors_graph(lrhsi_2d.T, n_neighbors=k, mode="connectivity").toarray()
         sigma_S = 1000
@@ -156,7 +151,7 @@ class Dataset(data.Dataset):
             # for j in range(p):
                 id_image = lrhsi_2d[:, id]
                 # id_image = lrhsi_2d[:, j]
-                weight = np.math.exp(-np.sum((i_image - id_image) ** 2) / sigma_S)
+                weight = np.exp(-np.sum((i_image - id_image) ** 2) / sigma_S)
                 spectral_weights[i, id] = weight
                 # spectral_weights[i, j] = weight
         spectral_diag = np.diag(np.sum(spectral_weights, axis=1)) - spectral_weights
@@ -221,7 +216,8 @@ class Dataset(data.Dataset):
         img_patch = self.img_patch_list[index]
         img_lr = self.img_lr_list[index]
         img_msi = self.img_msi_list[index]
-        img_name = os.path.basename(self.imgpath_list[index]).split(".")[0]
+        img_name = os.path.basename(self.img_path_list[index]).split(".")[0]
+        print(img_name)
         img_tensor_lr = torch.from_numpy(img_lr.transpose(2, 0, 1).copy()).float()
         img_tensor_hr = torch.from_numpy(img_patch.transpose(2, 0, 1).copy()).float()
         img_tensor_rgb = torch.from_numpy(img_msi.transpose(2, 0, 1).copy()).float()
@@ -243,4 +239,4 @@ class Dataset(data.Dataset):
         # "spm2": img_tensor_spm2,
 
     def __len__(self):
-        return len(self.imgpath_list)
+        return len(self.img_path_list)

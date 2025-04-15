@@ -32,4 +32,5 @@ def create_model(opt, hsi_c, msi_c, lrhsi_h, lrhsi_w, sp_matrix, sp_range):
     model_class = find_model_using_name(opt.model_name)
     instance = model_class()
     instance.initialize(opt, hsi_c, msi_c, lrhsi_h, lrhsi_w, sp_matrix, sp_range)
+    print("Model instance initialized")
     return instance
