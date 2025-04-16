@@ -92,7 +92,7 @@ if __name__ == "__main__":
     
     train_opt.scale_factor = 8
     train_opt.num_theta = 30
-    train_opt.print_freq = 100
+    train_opt.print_freq = 1
     train_opt.save_freq = 100
     train_opt.batchsize = 1
     train_opt.which_epoch = train_opt.niter + train_opt.niter_decay
@@ -125,7 +125,8 @@ if __name__ == "__main__":
     visualizer = Visualizer(train_opt, train_dataloader.sp_matrix)
 
     total_steps = 0
-    
+
+    print("Entering epoch loop")    
     for epoch in tqdm(range(train_opt.epoch_count, train_opt.niter + train_opt.niter_decay + 1)):
     
         epoch_start_time = time.time()
@@ -136,11 +137,15 @@ if __name__ == "__main__":
 
         for i, data in enumerate(train_dataloader):
 
+            print("TOTO")
+
             iter_start_time = time.time()
             total_steps += train_opt.batchsize
             epoch_iter += train_opt.batchsize
 
             visualizer.reset()
+
+            print("Visualizer reset")
 
             train_model.set_input(data, True)
             train_model.optimize_joint_parameters(epoch)
@@ -152,6 +157,7 @@ if __name__ == "__main__":
             train_psnr_list.append(train_psnr)
 
             if epoch % train_opt.print_freq == 0:
+                print("TATA")
                 losses = train_model.get_current_losses()
                 t = (time.time() - iter_start_time) / train_opt.batchsize
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t)

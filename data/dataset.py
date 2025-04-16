@@ -83,7 +83,9 @@ class Dataset(data.Dataset):
             img_lr = self.generate_LrHSI(img_patch, s)
             # sigmah = np.sqrt(np.sum(img_lr)**2 / (10 ** (SNR/10)) / (r_h*r_w*c))
             # img_lr_noise = img_lr + sigmah * np.random.normal(size=no.shape(img_lr))
+            print(f"img_lr.shape {img_lr.shape}")
             self.img_lr_list.append(img_lr)
+
             (self.lrhsi_height, self.lrhsi_width, p) = img_lr.shape
             self.spectral_manifold = self.generate_spectral_manifold(
                 np.reshape(img_lr, [self.lrhsi_height * self.lrhsi_width, p]), k=15
@@ -101,6 +103,7 @@ class Dataset(data.Dataset):
                 np.reshape(img_msi, [self.msi_height * p, self.msi_width]), k=25
             )
             img_msi = img_msi.transpose(0,2,1)
+            print(f"img_msi.shape {img_msi.shape}")
             # io.savemat(r"D:\\Dataset\\Hyperspectral Image Plot\\Pavia_manifold.mat", 
             #            {"spem":self.spectral_manifold,"spam1":self.spatial_manifold_1,"spam2":self.spatial_manifold_2,
             #             "spem_w":self.spectral_weights,"spam1_w":self.spatial_manifold_1_weights,"spam2_w":self.spatial_manifold_2_weights})

@@ -78,18 +78,18 @@ class DTDNML(BaseModel):
             lrhsi_wid * self.opt.scale_factor
         )
 
-        # net getnerator
+        # net generator
         self.hrmsi_feature = network.define_hrmsi_feature(
             in_channel=msi_channels, out_channel=num_s, gpu_ids=self.gpu_ids
         )
         self.lrhsi_feature = network.define_lrhsi_feature(
             in_channel=hsi_channels, out_channel=num_s, gpu_ids=self.gpu_ids
         )
-        self.fearture_unet = network.define_feature_unet(
+        self.feature_unet = network.define_feature_unet(
             out_channel=num_s, H=H, Hc=code_tensor_scale[0], W=W, Wc=code_tensor_scale[1], scale=self.opt.scale_factor, gpu_ids=self.gpu_ids
         )
         self.psf_2 = network.define_psf_2(scale=opt.scale_factor, gpu_ids=self.gpu_ids)
-        # self.fearture_unet = network.define_feature_concat(in_c=num_s, scale=self.opt.scale_factor, psf=self.psf_2, H=H, Hc=code_tensor_scale[0], W=W, Wc=code_tensor_scale[1], gpu_ids=self.gpu_ids)
+        # self.feature_unet = network.define_feature_concat(in_c=num_s, scale=self.opt.scale_factor, psf=self.psf_2, H=H, Hc=code_tensor_scale[0], W=W, Wc=code_tensor_scale[1], gpu_ids=self.gpu_ids)
 
         if self.opt.concat == "No":
             self.lr_hsi_dict_wh = network.define_lrdict_wh(
@@ -166,7 +166,7 @@ class DTDNML(BaseModel):
         self.model_names = [
             "hrmsi_feature",
             "lrhsi_feature",
-            "fearture_unet",
+            "feature_unet",
             "lr_hsi_dict_s",
             "hr_msi_dict_wh",
             "psf_2",
@@ -192,13 +192,13 @@ class DTDNML(BaseModel):
             betas=(0.9, 0.999),
         )
         self.optimizers.append(self.optimizer_hrmsi_feature)
-        self.optimizer_fearture_unet = torch.optim.Adam(
-            itertools.chain(self.fearture_unet.parameters()),
+        self.optimizer_feature_unet = torch.optim.Adam(
+            itertools.chain(self.feature_unet.parameters()),
             lr=lr * 0.8,
             betas=(0.9, 0.999),
             weight_decay=5e-4,
         )
-        self.optimizers.append(self.optimizer_fearture_unet)
+        self.optimizers.append(self.optimizer_feature_unet)
 
         self.optimizer_lr_hsi_dict_wh = torch.optim.Adam(
             itertools.chain(self.lr_hsi_dict_wh.parameters()),
@@ -275,22 +275,35 @@ class DTDNML(BaseModel):
     def my_forward(self, epoch):
         # generate code tensor from LrHSI or HrMSI
         self.code_tensor_lr = self.lrhsi_feature(self.real_lhsi)
+        print(self.code_tensor_lr.shape)
         self.code_tensor = self.hrmsi_feature(self.real_hmsi)
-        
-        self.code_tensor = self.fearture_unet(self.code_tensor, self.code_tensor_lr, epoch)
-        # self.code_tensor = self.fearture_unet(self.code_tensor, self.code_tensor_lr)
+        print(self.code_tensor.shape)        
+        self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr, epoch)
+        # self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr)
+        print(self.code_tensor.shape)
+
+        print(self.lr_hsi_dict_wh(self.code_tensor).shape)
+        print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        print(self.hr_msi_dict_wh(self.code_tensor).shape)
 
         # 重建lr-hsi
         if self.opt.concat == "Yes":
             self.rec_lrhsi = self.lr_hsi_dict_s(self.lr_hsi_dict_wh(self.code_tensor))
+            print("rec lrhsi", self.rec_lrhsi.shape)
         else:
             self.rec_lrhsi = self.lr_hsi_dict_s(
                 self.lr_hsi_dict_wh(self.code_tensor_lr)
             )
+
+        print(self.lr_hsi_dict_wh(self.code_tensor).shape)
+        print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        print(self.hr_msi_dict_wh(self.code_tensor).shape)
         # 重建hr-msi
         self.rec_hrmsi = self.hr_msi_dict_s(self.hr_msi_dict_wh(self.code_tensor))
+        print("rec hrmsi", self.rec_hrmsi.shape)
         # 重建hr-hsi
         self.rec_hrhsi = self.lr_hsi_dict_s(self.hr_msi_dict_wh(self.code_tensor))
+        print("rec hrhsi", self.rec_hrhsi.shape)
 
         # 正交约束重构
         # self.rec_lrhsi_orthg = self.lr_hsi_dict_s(self.lr_hsi_dict_wh(self.lr_hsi_dict_st(self.lr_hsi_dict_wht(self.real_lhsi))))
@@ -301,6 +314,9 @@ class DTDNML(BaseModel):
         # self.rec_hsi_hrmsi = self.hr_msi_dict_wh(self.srf(self.lr_hsi_dict_s(self.code_tensor)))
         self.rec_hsi_lrhsi = self.psf_2(self.rec_hrhsi)
         self.rec_hsi_hrmsi = self.srf(self.rec_hrhsi)
+
+        print("rec hsi lrhsi", self.rec_hsi_lrhsi.shape)
+        print("rec hsi hrmsi", self.rec_hsi_hrmsi.shape)
 
         # 构建lr-msi
         self.rec_lrhsi_lrmsi = self.srf(self.real_lhsi)
@@ -452,7 +468,7 @@ class DTDNML(BaseModel):
             [
                 self.lrhsi_feature,
                 self.hrmsi_feature,
-                self.fearture_unet,
+                self.feature_unet,
                 self.lr_hsi_dict_s,
                 self.lr_hsi_dict_wh,
                 self.hr_msi_dict_wh,
@@ -473,7 +489,7 @@ class DTDNML(BaseModel):
         self.optimizer_hr_msi_dict_wh.zero_grad()
         self.optimizer_hr_msi_dict_s.zero_grad()
 
-        self.optimizer_fearture_unet.zero_grad()
+        self.optimizer_feature_unet.zero_grad()
 
         self.optimizer_psf_2.zero_grad()
 
@@ -490,7 +506,7 @@ class DTDNML(BaseModel):
         self.optimizer_hr_msi_dict_wh.step()
         self.optimizer_hr_msi_dict_s.step()
 
-        self.optimizer_fearture_unet.step()
+        self.optimizer_feature_unet.step()
 
         self.optimizer_psf_2.step()
 
