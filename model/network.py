@@ -1088,13 +1088,19 @@ class LrHSIDictionaryWH(nn.Module):
 
     def forward(self, x):
         # batch, channel, height, weight = list(x.size())
+        print(f"in lrHSIDict - {x.size()}")
         nx = x.permute(0, 2, 1, 3)
+        print(f"in lrHSIDict - {nx.size()}")
         nx = self.conv_w(nx)
+        print(f"in lrHSIDict - {nx.size()}")
         nx = nx.permute(0, 2, 1, 3)
-
+        print(f"in lrHSIDict - {nx.size()}")
         nx = nx.permute(0, 3, 2, 1)
+        print(f"in lrHSIDict - {nx.size()}")
         nx = self.conv_h(nx)
+        print(f"in lrHSIDict - {nx.size()}")
         nx = nx.permute(0, 3, 2, 1)
+        print(f"in lrHSIDict - {nx.size()}")
         return nx
 
 
@@ -1141,10 +1147,10 @@ class LrHSIDictionaryS(nn.Module):
     def __init__(self, code_scale, hsi_scale_s):
         # 字典的更新，用卷积层代替
         super(LrHSIDictionaryS, self).__init__()
-
         self.conv_s = nn.Conv2d(code_scale[2], hsi_scale_s, kernel_size=1, stride=1, padding=0, bias=False)
         
     def forward(self, x):
+        print("in LrHSIDictionaryS, input size", x.size())
         # batch, channel, height, weight = list(x.size())
         return self.conv_s(x).clamp_(0, 1)
 

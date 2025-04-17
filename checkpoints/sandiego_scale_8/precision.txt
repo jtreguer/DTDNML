@@ -9,3 +9,24 @@ Epoch:101.0 Name:Sandiego RMSE:0.08266 PSNR:18.86433 SAM:46.20098 ERGAS:13.796 S
 ================ Precision Log (Tue Apr 15 17:17:14 2025) ================
 ================ Precision Log (Tue Apr 15 17:37:44 2025) ================
 ================ Precision Log (Tue Apr 15 17:51:07 2025) ================
+================ Precision Log (Wed Apr 16 13:09:02 2025) ================
+================ Precision Log (Wed Apr 16 13:25:26 2025) ================
+================ Precision Log (Wed Apr 16 15:37:34 2025) ================
+================ Precision Log (Wed Apr 16 17:00:35 2025) ================
+================ Precision Log (Thu Apr 17 09:47:41 2025) ================
+================ Precision Log (Thu Apr 17 09:59:10 2025) ================
+================ Precision Log (Thu Apr 17 10:19:34 2025) ================
+================ Precision Log (Thu Apr 17 10:39:21 2025) ================
+================ Precision Log (Thu Apr 17 10:53:14 2025) ================
+================ Precision Log (Thu Apr 17 10:58:00 2025) ================
+================ Precision Log (Thu Apr 17 11:01:19 2025) ================
+================ Precision Log (Thu Apr 17 11:07:34 2025) ================
+Epoch:2.0 Name:sandiego_ort RMSE:nan PSNR:nan SAM:nan ERGAS:nan SSIM:nan UQI:nan
+Epoch:3.0 Name:sandiego_ort RMSE:nan PSNR:nan SAM:nan ERGAS:nan SSIM:nan UQI:nan
+Epoch:4.0 Name:sandiego_ort RMSE:nan PSNR:nan SAM:nan ERGAS:nan SSIM:nan UQI:nan
+Epoch:5.0 Name:sandiego_ort RMSE:nan PSNR:nan SAM:nan ERGAS:nan SSIM:nan UQI:nan
+================ Precision Log (Thu Apr 17 11:53:32 2025) ================
+================ Precision Log (Thu Apr 17 11:56:21 2025) ================
+================ Precision Log (Thu Apr 17 11:57:24 2025) ================
+================ Precision Log (Thu Apr 17 12:00:12 2025) ================
+================ Precision Log (Thu Apr 17 12:20:06 2025) ================

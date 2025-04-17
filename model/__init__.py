@@ -1,5 +1,6 @@
 import importlib
 from model.base_model import BaseModel
+import torch
 
 
 def get_option_setter(model_name):
@@ -33,4 +34,7 @@ def create_model(opt, hsi_c, msi_c, lrhsi_h, lrhsi_w, sp_matrix, sp_range):
     instance = model_class()
     instance.initialize(opt, hsi_c, msi_c, lrhsi_h, lrhsi_w, sp_matrix, sp_range)
     print("Model instance initialized")
+    print(f"CUDA available: {torch.cuda.is_available()}")
+    print(f"Current device: {torch.cuda.current_device()}")
+    print(f"Device name: {torch.cuda.get_device_name(0)}")
     return instance

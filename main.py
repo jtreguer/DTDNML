@@ -114,6 +114,8 @@ if __name__ == "__main__":
     train_dataloader = get_dataloader(train_opt, isTrain=True)
     dataset_size = len(train_dataloader)
     print(f"Dataset size {dataset_size}")
+    train_opt.gpu_ids = [0]
+    print("gpu opt", train_opt.gpu_ids)
     train_model = create_model(train_opt, train_dataloader.hsi_channels,
                                train_dataloader.msi_channels,
                                train_dataloader.lrhsi_height,
@@ -122,11 +124,15 @@ if __name__ == "__main__":
                                train_dataloader.sp_range)
 
     train_model.setup(train_opt)
+
+    print(f"Using device {train_model.device}")
     visualizer = Visualizer(train_opt, train_dataloader.sp_matrix)
 
     total_steps = 0
 
-    print("Entering epoch loop")    
+    print("Entering epoch loop")
+    print(f"Epoch count {train_opt.epoch_count}")
+    print(train_opt.niter + train_opt.niter_decay + 1)
     for epoch in tqdm(range(train_opt.epoch_count, train_opt.niter + train_opt.niter_decay + 1)):
     
         epoch_start_time = time.time()
@@ -137,8 +143,6 @@ if __name__ == "__main__":
 
         for i, data in enumerate(train_dataloader):
 
-            print("TOTO")
-
             iter_start_time = time.time()
             total_steps += train_opt.batchsize
             epoch_iter += train_opt.batchsize
@@ -147,7 +151,7 @@ if __name__ == "__main__":
 
             print("Visualizer reset")
 
-            train_model.set_input(data, True)
+            train_model.set_input(data, isTrain=True)
             train_model.optimize_joint_parameters(epoch)
 
             # hues.info("[{}/{} in {}/{}]".format(i, dataset_size // train_opt.batchsize,
@@ -157,7 +161,6 @@ if __name__ == "__main__":
             train_psnr_list.append(train_psnr)
 
             if epoch % train_opt.print_freq == 0:
-                print("TATA")
                 losses = train_model.get_current_losses()
                 t = (time.time() - iter_start_time) / train_opt.batchsize
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t)

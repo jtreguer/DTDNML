@@ -220,7 +220,9 @@ class Dataset(data.Dataset):
         img_lr = self.img_lr_list[index]
         img_msi = self.img_msi_list[index]
         img_name = os.path.basename(self.img_path_list[index]).split(".")[0]
-        print(img_name)
+        # print(img_name)
+        # print("img_lr transpose",img_lr.transpose(2,0,1).shape)
+        # Save as tensors 'c h w'
         img_tensor_lr = torch.from_numpy(img_lr.transpose(2, 0, 1).copy()).float()
         img_tensor_hr = torch.from_numpy(img_patch.transpose(2, 0, 1).copy()).float()
         img_tensor_rgb = torch.from_numpy(img_msi.transpose(2, 0, 1).copy()).float()

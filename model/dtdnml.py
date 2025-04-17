@@ -243,6 +243,7 @@ class DTDNML(BaseModel):
     def set_input(self, input, isTrain=True):
         if isTrain:
             self.real_lhsi = Variable(input["lhsi"], requires_grad=True).to(self.device)
+            print(f"self.real_lhsi {self.real_lhsi.shape}")
             self.real_hmsi = Variable(input["hmsi"], requires_grad=True).to(self.device)
             self.real_hhsi = Variable(input["hhsi"], requires_grad=True).to(self.device)
             self.manifold = Variable(input["sm"], requires_grad=True).to(self.device)
@@ -282,28 +283,38 @@ class DTDNML(BaseModel):
         # self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr)
         print(self.code_tensor.shape)
 
-        print(self.lr_hsi_dict_wh(self.code_tensor).shape)
-        print(self.hr_msi_dict_wh(self.code_tensor).shape)
-        print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        print("self.lr_hsi_dict_wh(self.code_tensor).shape", self.lr_hsi_dict_wh(self.code_tensor).shape)
+        # print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        # print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        # print(self.lr_hsi_dict_wh(self.code_tensor).shape)
+        # print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        # print(self.hr_msi_dict_wh(self.code_tensor).shape)
 
         # 重建lr-hsi
         if self.opt.concat == "Yes":
             self.rec_lrhsi = self.lr_hsi_dict_s(self.lr_hsi_dict_wh(self.code_tensor))
-            print("rec lrhsi", self.rec_lrhsi.shape)
         else:
             self.rec_lrhsi = self.lr_hsi_dict_s(
                 self.lr_hsi_dict_wh(self.code_tensor_lr)
             )
 
-        print(self.lr_hsi_dict_wh(self.code_tensor).shape)
-        print(self.hr_msi_dict_wh(self.code_tensor).shape)
-        print(self.hr_msi_dict_wh(self.code_tensor).shape)
+        print("rec lrhsi", self.rec_lrhsi.shape)
+        # JT
+        self.rec_lrhsi = self.rec_lrhsi.permute(0,1,3,2)
+        print("rec lrhsi", self.rec_lrhsi.shape)
+
         # 重建hr-msi
         self.rec_hrmsi = self.hr_msi_dict_s(self.hr_msi_dict_wh(self.code_tensor))
         print("rec hrmsi", self.rec_hrmsi.shape)
+
+        # JT
+        self.rec_hrmsi = self.rec_hrmsi.permute(0,1,3,2)
+
         # 重建hr-hsi
         self.rec_hrhsi = self.lr_hsi_dict_s(self.hr_msi_dict_wh(self.code_tensor))
         print("rec hrhsi", self.rec_hrhsi.shape)
+        # JT
+        self.rec_hrhsi = self.rec_hrhsi.permute(0,1,3,2)
 
         # 正交约束重构
         # self.rec_lrhsi_orthg = self.lr_hsi_dict_s(self.lr_hsi_dict_wh(self.lr_hsi_dict_st(self.lr_hsi_dict_wht(self.real_lhsi))))
@@ -321,6 +332,9 @@ class DTDNML(BaseModel):
         # 构建lr-msi
         self.rec_lrhsi_lrmsi = self.srf(self.real_lhsi)
         self.rec_hrmsi_lrmsi = self.psf_2(self.real_hmsi)
+
+        print("self.rec_lrhsi_lrmsi", self.rec_lrhsi_lrmsi.size())
+        print("self.rec_hrmsi_lrmsi", self.rec_hrmsi_lrmsi.size())
 
         self.visual_corresponding_name["real_lhsi"] = "rec_lrhsi"
         self.visual_corresponding_name["real_hmsi"] = "rec_hrmsi"
@@ -349,12 +363,12 @@ class DTDNML(BaseModel):
         self.loss_rec = self.loss_msi_pixelwise + self.loss_lr_pixelwise
         # self.loss_rec_orthg = self.loss_msi_orthg + self.loss_lr_orthg
 
-        # Constraints loss
+        # Constraints / degradation loss
         # hrhsi to lrhsi: Learn the PSF
         self.loss_msi_ss_lr = self.L1loss(self.real_lhsi, self.rec_hsi_lrhsi)
         # hrhsi to hrmsi: Learn the SRF
         self.loss_msi_ss_msi = self.L1loss(self.real_hmsi, self.rec_hsi_hrmsi)
-        # lrmsi: Lean the PSF and SRF
+        # lrmsi: Learn the PSF and SRF
         self.loss_lrmsi_pixelwise = (
             self.L1loss(self.rec_lrhsi_lrmsi, self.rec_hrmsi_lrmsi) * self.opt.lambda_D
         )
@@ -365,9 +379,16 @@ class DTDNML(BaseModel):
         # self.loss_cons = self.loss_lrmsi_pixelwise
 
         # if epoch > 3000:
-        h = self.lr_hsi_dict_wh.module.conv_h.weight.permute(2, 3, 0, 1).squeeze()
-        w = self.lr_hsi_dict_wh.module.conv_w.weight.permute(2, 3, 0, 1).squeeze()
-        V = self.lr_hsi_dict_s.module.conv_s.weight.permute(2, 3, 0, 1).squeeze()
+        # Faulty lines
+        if 0:
+            h = self.lr_hsi_dict_wh.module.conv_h.weight.permute(2, 3, 0, 1).squeeze()
+            w = self.lr_hsi_dict_wh.module.conv_w.weight.permute(2, 3, 0, 1).squeeze()
+            V = self.lr_hsi_dict_s.module.conv_s.weight.permute(2, 3, 0, 1).squeeze()
+
+        # Corrected lines
+        h = self.lr_hsi_dict_wh.conv_h.weight.permute(2, 3, 0, 1).squeeze()
+        w = self.lr_hsi_dict_wh.conv_w.weight.permute(2, 3, 0, 1).squeeze()
+        V = self.lr_hsi_dict_s.conv_s.weight.permute(2, 3, 0, 1).squeeze()
 
         self.rec_lrhsi_orthg = chain_mode_product(chain_mode_product(self.real_lhsi, [V,h,w]), [V.t(),h.t(),w.t()])
         self.loss_lr_orthg = self.L1loss(self.real_lhsi, self.rec_lrhsi_orthg)
@@ -379,9 +400,9 @@ class DTDNML(BaseModel):
         # Hz=torch.reshape(self.rec_lrhsi.permute(0,2,3,1).squeeze(), [self.rec_lrhsi.size(2)**2, self.rec_lrhsi.size(1)])
         # self.loss_manifold = torch.trace(torch.matmul(torch.matmul(Hz, self.manifold.squeeze().to(device=self.device)), Hz.T))
 
-        H = self.hr_msi_dict_wh.module.conv_h.weight.permute(2, 3, 0, 1).squeeze()
-        W = self.hr_msi_dict_wh.module.conv_w.weight.permute(2, 3, 0, 1).squeeze()
-        v = self.hr_msi_dict_s.module.conv_s.weight.permute(2, 3, 0, 1).squeeze()
+        H = self.hr_msi_dict_wh.conv_h.weight.permute(2, 3, 0, 1).squeeze()
+        W = self.hr_msi_dict_wh.conv_w.weight.permute(2, 3, 0, 1).squeeze()
+        v = self.hr_msi_dict_s.conv_s.weight.permute(2, 3, 0, 1).squeeze()
 
         self.rec_hrmsi_orthg = chain_mode_product(chain_mode_product(self.real_hmsi, [v,H,W]), [v.t(),H.t(),W.t()])
         self.loss_msi_orthg = self.L1loss(self.real_hmsi, self.rec_hrmsi_orthg)

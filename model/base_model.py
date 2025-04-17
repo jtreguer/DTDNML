@@ -20,6 +20,7 @@ class BaseModel():
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')
+        print(f'Model set to device: {self.device}')
         # self.sec_device = torch.device('cuda:{}'.format(self.gpu_ids[1])) if self.gpu_ids[1] else torch.device('cpu')
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
 
