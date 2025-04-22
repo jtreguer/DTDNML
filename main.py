@@ -32,6 +32,8 @@ setup_seed(5)
 
 if __name__ == "__main__":
 
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+
     start_time = time.time()
 
     train_opt = TrainOptions().parse()
@@ -133,6 +135,9 @@ if __name__ == "__main__":
     print("Entering epoch loop")
     print(f"Epoch count {train_opt.epoch_count}")
     print(train_opt.niter + train_opt.niter_decay + 1)
+
+    torch.cuda.empty_cache()
+
     for epoch in tqdm(range(train_opt.epoch_count, train_opt.niter + train_opt.niter_decay + 1)):
     
         epoch_start_time = time.time()

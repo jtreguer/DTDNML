@@ -276,9 +276,9 @@ class DTDNML(BaseModel):
     def my_forward(self, epoch):
         # generate code tensor from LrHSI or HrMSI
         self.code_tensor_lr = self.lrhsi_feature(self.real_lhsi)
-        print(self.code_tensor_lr.shape)
+        print("1",self.code_tensor_lr.shape)
         self.code_tensor = self.hrmsi_feature(self.real_hmsi)
-        print(self.code_tensor.shape)        
+        print("2",self.code_tensor.shape)        
         self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr, epoch)
         # self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr)
         print(self.code_tensor.shape)

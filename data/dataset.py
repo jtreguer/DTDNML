@@ -14,6 +14,7 @@ from einops import rearrange
 
 class Dataset(data.Dataset):
 
+    # UNUSED
     patch_size = 64
     SNR = 25
     
@@ -46,6 +47,7 @@ class Dataset(data.Dataset):
             with rasterio.open(file_path) as src:
                 print("Reading HS data")
                 hyperspectral_data = src.read()
+                hyperspectral_data = hyperspectral_data[:,400:400+512,100:100+512]
 
                 # Display information about the hyperspectral data
                 print('Shape of hyperspectral data:', hyperspectral_data.shape)
