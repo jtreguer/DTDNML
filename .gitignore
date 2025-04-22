@@ -2,5 +2,5 @@ venv/
 sandiego/
 *.img
 *.pyc
-saved_models/
+trained_models/
 *.pyc

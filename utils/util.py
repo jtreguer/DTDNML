@@ -78,3 +78,16 @@ def mkdirs(paths):
 def mkdir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+def save_checkpoint(state, filename="checkpoint.pth"):
+    print(f"=> Saving checkpoint @ {filename}")
+    torch.save(state, filename)
+
+def load_checkpoint(checkpoint: str, model, optimizer, scheduler):
+    print("=> Loading checkpoint")
+    cp = torch.load(checkpoint)
+    model.load_state_dict(cp['state_dict'])
+    # model.load_state_dict(cp['net'],strict=False)  
+    optimizer.load_state_dict(cp['optimizer']) 
+    scheduler.load_state_dict(cp['scheduler'])
+    start_epoch = cp['epoch']+1  

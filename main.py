@@ -14,6 +14,7 @@ from data import get_dataloader
 from model import create_model
 from options.train_options import TrainOptions
 from utils.visualizer import Visualizer
+from utils.util import load_checkpoint, save_checkpoint
 import scipy.io as sio
 import numpy as np
 import random
@@ -133,8 +134,10 @@ if __name__ == "__main__":
     total_steps = 0
 
     print("Entering epoch loop")
-    print(f"Epoch count {train_opt.epoch_count}")
+    print(f"Epoch count starting at {train_opt.epoch_count}")
     print(train_opt.niter + train_opt.niter_decay + 1)
+
+    checkpoint = None
 
     torch.cuda.empty_cache()
 
@@ -145,6 +148,26 @@ if __name__ == "__main__":
         epoch_iter = 0
 
         train_psnr_list = []
+
+        if checkpoint is None:
+            print("No checkpoint - starting training from scratch")
+            log_dir = f'./trained_models/{train_opt.name}_x{train_opt.scale}/'
+            print(log_dir)
+            if not os.path.exists(log_dir):
+                os.mkdir(log_dir)
+            filename = log_dir+f"{train_opt.name}_x{train_opt.scale}.pth"
+            hist_batch_loss = []
+            hist_epoch_loss = []
+
+        if checkpoint is not None:
+            filename = checkpoint
+            print(f'Using check_point: {checkpoint}')
+            cp = torch.load(checkpoint)
+            train_model.load_state_dict(cp['model'],strict=False)  
+            train_model.optimizers.load_state_dict(cp['optimizer']) 
+            train_model.schedulers.load_state_dict(cp['scheduler'])
+            hist_batch_loss = cp['hist_batch_loss']
+            hist_epoch_loss = cp['hist_epoch_loss']
 
         for i, data in enumerate(train_dataloader):
 
@@ -191,14 +214,20 @@ if __name__ == "__main__":
             # if epoch % (100*train_opt.print_freq) == 0:
             #     train_model.save_networks(epoch)
 
-        # print('End of epoch %d / %d \t Time Taken: %d sec' % (
-        # epoch, train_opt.niter + train_opt.niter_decay, time.time() - epoch_start_time))
+        if epoch % train_opt.save_epoch_freq == 0 :
+            state = {
+                'epoch': epoch,
+                'model': train_model.state_dict(),
+                'optimizer': train_model.optimizers.state_dict(),
+                'scheduler': train_model.schedulers.state_dict()
+                # 'hist_batch_loss': hist_batch_loss,
+                # 'hist_epoch_loss': hist_epoch_loss
+                }
+
+        print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, train_opt.niter + train_opt.niter_decay, time.time() - epoch_start_time))
 
         train_model.update_learning_rate()
-        # if epoch == 10000:
-        #     rec_hhsi = train_model.get_current_visuals()[
-        #             train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
-        #     sio.savemat(os.path.join("./Results/pavia_cat_3/", ''.join(data['name']) + '_epoch_10000.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
+
     rec_hhsi = train_model.get_current_visuals()[
         train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
     sio.savemat(os.path.join("./checkpoints/" + train_opt.name  + "/results/", ''.join(data['name']) + '_' + str(epoch) + '.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
