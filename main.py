@@ -151,11 +151,11 @@ if __name__ == "__main__":
 
         if checkpoint is None:
             print("No checkpoint - starting training from scratch")
-            log_dir = f'./trained_models/{train_opt.name}_x{train_opt.scale}/'
+            log_dir = f'./trained_models/{train_opt.name}_x{train_opt.scale_factor}/'
             print(log_dir)
             if not os.path.exists(log_dir):
                 os.mkdir(log_dir)
-            filename = log_dir+f"{train_opt.name}_x{train_opt.scale}.pth"
+            filename = log_dir+f"{train_opt.name}_x{train_opt.scale_factor}.pth"
             hist_batch_loss = []
             hist_epoch_loss = []
 
@@ -215,22 +215,25 @@ if __name__ == "__main__":
             #     train_model.save_networks(epoch)
 
         if epoch % train_opt.save_epoch_freq == 0 :
-            state = {
-                'epoch': epoch,
-                'model': train_model.state_dict(),
-                'optimizer': train_model.optimizers.state_dict(),
-                'scheduler': train_model.schedulers.state_dict()
-                # 'hist_batch_loss': hist_batch_loss,
-                # 'hist_epoch_loss': hist_epoch_loss
-                }
+            # state = {
+            #     'epoch': epoch,
+            #     'model': train_model.state_dict(),
+            #     'optimizer': train_model.optimizers.state_dict(),
+            #     'scheduler': train_model.schedulers.state_dict()
+            #     # 'hist_batch_loss': hist_batch_loss,
+            #     # 'hist_epoch_loss': hist_epoch_loss
+            #     }
+            # print(f"Saving: {filename}")   
+            # save_checkpoint(state, filename=filename)
+            train_model.save_networks(epoch)
+
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, train_opt.niter + train_opt.niter_decay, time.time() - epoch_start_time))
 
         train_model.update_learning_rate()
 
-    rec_hhsi = train_model.get_current_visuals()[
-        train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
-    sio.savemat(os.path.join("./checkpoints/" + train_opt.name  + "/results/", ''.join(data['name']) + '_' + str(epoch) + '.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
+    rec_hhsi = train_model.get_current_visuals()[train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
+    # sio.savemat(os.path.join("./checkpoints/" + train_opt.name  + "/results/", ''.join(data['name']) + '_' + str(epoch) + '.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
     # sio.savemat(os.path.join("./Results/" + train_opt.name  + "/", ''.join(data['name']) + '.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
 
     print('full time %d sec' % (time.time() - start_time))

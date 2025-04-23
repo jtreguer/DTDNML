@@ -3,4 +3,4 @@ sandiego/
 *.img
 *.pyc
 trained_models/
-*.pyc
+checkpoints/
