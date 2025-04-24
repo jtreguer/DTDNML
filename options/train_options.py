@@ -17,7 +17,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_decay_iters', type=int, default=100, help='multiply by a gamma every lr_decay_iters iterations')
         parser.add_argument('--lr_decay_gamma', type=float, default=0.8)
         parser.add_argument('--lr_decay_patience', type=int, default=50)
-        parser.add_argument('--save_epoch_freq', type=int, default=2, help='frequency of saving checkpoints at the end of epochs')
+        parser.add_argument('--save_epoch_freq', type=int, default=50, help='frequency of saving checkpoints at the end of epochs')
 
         # visualizer
         parser.add_argument('--display_freq', type=int, default=50, help='frequency of showing training results on screen')

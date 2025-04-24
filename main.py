@@ -138,6 +138,26 @@ if __name__ == "__main__":
     print(train_opt.niter + train_opt.niter_decay + 1)
 
     checkpoint = None
+    checkpoint = './checkpoints'
+
+    if checkpoint is None:
+      print("No checkpoint - starting training from scratch")
+      log_dir = f'./checkpoints/{train_opt.name}_x{train_opt.scale_factor}/'
+      print(log_dir)
+      if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+      filename = log_dir+f"{train_opt.name}_x{train_opt.scale_factor}.pth"
+
+    if checkpoint is not None:
+      filename = checkpoint
+      print(f'Using check_point: {checkpoint}')
+      # cp = torch.load(checkpoint)
+      # train_model.load_state_dict(cp['model'],strict=False)  
+      # train_model.optimizers.load_state_dict(cp['optimizer']) 
+      # train_model.schedulers.load_state_dict(cp['scheduler'])
+      # hist_batch_loss = cp['hist_batch_loss']
+      # hist_epoch_loss = cp['hist_epoch_loss']
+      train_model.load_networks(2720)
 
     torch.cuda.empty_cache()
 
@@ -148,26 +168,6 @@ if __name__ == "__main__":
         epoch_iter = 0
 
         train_psnr_list = []
-
-        if checkpoint is None:
-            print("No checkpoint - starting training from scratch")
-            log_dir = f'./trained_models/{train_opt.name}_x{train_opt.scale_factor}/'
-            print(log_dir)
-            if not os.path.exists(log_dir):
-                os.mkdir(log_dir)
-            filename = log_dir+f"{train_opt.name}_x{train_opt.scale_factor}.pth"
-            hist_batch_loss = []
-            hist_epoch_loss = []
-
-        if checkpoint is not None:
-            filename = checkpoint
-            print(f'Using check_point: {checkpoint}')
-            cp = torch.load(checkpoint)
-            train_model.load_state_dict(cp['model'],strict=False)  
-            train_model.optimizers.load_state_dict(cp['optimizer']) 
-            train_model.schedulers.load_state_dict(cp['scheduler'])
-            hist_batch_loss = cp['hist_batch_loss']
-            hist_epoch_loss = cp['hist_epoch_loss']
 
         for i, data in enumerate(train_dataloader):
 
