@@ -114,7 +114,7 @@ if __name__ == "__main__":
     train_opt.lambda_C = 0 # 1e-4 # 1e-3 # spatial manifold
     train_opt.lambda_F = 100
 
-    train_dataloader = get_dataloader(train_opt, isTrain=True)
+    train_dataloader = get_dataloader(train_opt, isTrain=False)
     dataset_size = len(train_dataloader)
     print(f"Dataset size {dataset_size}")
     train_opt.gpu_ids = [0]
@@ -133,11 +133,10 @@ if __name__ == "__main__":
 
     total_steps = 0
 
-    print("Entering epoch loop")
     print(f"Epoch count starting at {train_opt.epoch_count}")
     print(train_opt.niter + train_opt.niter_decay + 1)
 
-    checkpoint = None
+#     checkpoint = None
     checkpoint = './checkpoints'
 
     if checkpoint is None:
@@ -157,18 +156,36 @@ if __name__ == "__main__":
       # train_model.schedulers.load_state_dict(cp['scheduler'])
       # hist_batch_loss = cp['hist_batch_loss']
       # hist_epoch_loss = cp['hist_epoch_loss']
-      train_model.load_networks(50)
+      train_model.load_networks(10000)
+
+    train_model.isTrain = False
    
-    print("current model", train_model.isTrain)
+    print("current model isTrain", train_model.isTrain)
 
     torch.cuda.empty_cache()
 
-    data = train_dataloader[0]
+    data = next(iter(train_dataloader))
+
+    print("data type", type(data))
+    for k,v in data.items():
+        if hasattr(v,'shape'):
+            print(k,v.shape)
+        else:
+            print(k,v)
 
     train_model.set_input(data, isTrain=False)
 
 
-    rec_hhsi = train_model.get_current_visuals()[train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
+#     rec_hhsi = train_model.get_current_visuals()[train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
+    rec_hhsi = train_model.real_hhsi.cpu().detach().numpy()
+    print(rec_hhsi.shape)
+
+    rec_hhsi = np.squeeze(rec_hhsi).transpose(1,2,0)
+    np.save("rec_hhsi", rec_hhsi)
+
+    # TOUT SAUVEGARDER
+    # Calculer des métriques
+    # Charger des états intermédiaires, visualisations et métriques
     
 
     if 0:
@@ -246,5 +263,4 @@ if __name__ == "__main__":
     # sio.savemat(os.path.join("./checkpoints/" + train_opt.name  + "/results/", ''.join(data['name']) + '_' + str(epoch) + '.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
     # sio.savemat(os.path.join("./Results/" + train_opt.name  + "/", ''.join(data['name']) + '.mat'), {'out': rec_hhsi.transpose(1, 2, 0)})
 
-    print('full time %d sec' % (time.time() - start_time))
  

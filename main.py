@@ -4,6 +4,8 @@
 """
 Before run this file, please ensure running <python -m visdom.server> in current environment.
 Then, please go to http:localhost://#display_port# to see the visulizations.
+
+Training time full time 524363 sec, 146 hours
 """
 
 import torch
