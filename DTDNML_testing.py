@@ -156,13 +156,13 @@ if __name__ == "__main__":
       # train_model.schedulers.load_state_dict(cp['scheduler'])
       # hist_batch_loss = cp['hist_batch_loss']
       # hist_epoch_loss = cp['hist_epoch_loss']
-      train_model.load_networks(10000)
+      train_model.load_networks(1000)
 
     train_model.isTrain = False
    
     print("current model isTrain", train_model.isTrain)
 
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
 
     data = next(iter(train_dataloader))
 
@@ -175,17 +175,41 @@ if __name__ == "__main__":
 
     train_model.set_input(data, isTrain=False)
 
+    train_model.my_forward(0)
+
 
 #     rec_hhsi = train_model.get_current_visuals()[train_model.get_visual_corresponding_name()['real_hhsi']].data.cpu().float().numpy()[0]
-    rec_hhsi = train_model.real_hhsi.cpu().detach().numpy()
-    print(rec_hhsi.shape)
+    rec_hrhsi = train_model.rec_hrhsi.cpu().detach().numpy()
+    rec_lrhsi = train_model.rec_lrhsi.cpu().detach().numpy()
+    rec_hrmsi = train_model.rec_hrmsi.cpu().detach().numpy()
+    real_hhsi = train_model.real_hhsi.cpu().detach().numpy()
+    real_lrhsi = train_model.real_lhsi.cpu().detach().numpy()
+    real_hrmsi = train_model.real_hmsi.cpu().detach().numpy()
+    rec_hsi_lrhsi = train_model.rec_hsi_lrhsi.cpu().detach().numpy()
+    rec_hsi_hrmsi = train_model.rec_hsi_hrmsi.cpu().detach().numpy()
 
-    rec_hhsi = np.squeeze(rec_hhsi).transpose(1,2,0)
-    np.save("rec_hhsi", rec_hhsi)
+    print(rec_hrhsi.shape)
 
-    # TOUT SAUVEGARDER
+    rec_hrhsi = np.squeeze(rec_hrhsi).transpose(1,2,0)
+    rec_lrhsi = np.squeeze(rec_lrhsi).transpose(1,2,0)
+    rec_hrmsi = np.squeeze(rec_hrmsi).transpose(1,2,0)
+    real_hhsi = np.squeeze(real_hhsi).transpose(1,2,0)
+    real_lrhsi = np.squeeze(real_lrhsi).transpose(1,2,0)
+    real_hrmsi = np.squeeze(real_hrmsi).transpose(1,2,0)
+    rec_hsi_lrhsi = np.squeeze(rec_hsi_lrhsi).transpose(1,2,0)
+    rec_hsi_hrmsi = np.squeeze(rec_hsi_hrmsi).transpose(1,2,0)
+
+    np.save("rec/rec_hrhsi", rec_hrhsi)
+    np.save("rec/rec_lrhsi", rec_lrhsi)
+    np.save("rec/rec_hrmsi", rec_hrmsi)
+    np.save("rec/real_hhsi", real_hhsi)
+    np.save("rec/real_lrhsi", real_lrhsi)
+    np.save("rec/real_hrmsi", real_hrmsi)
+    np.save("rec/rec_hsi_lrhsi", rec_hsi_lrhsi)
+    np.save("rec/rec_hsi_hrmsi", rec_hsi_hrmsi)
+    
     # Calculer des métriques
-    # Charger des états intermédiaires, visualisations et métriques
+    # Charger des états intermédiaires pour comparaison, visualisations et métriques
     
 
     if 0:

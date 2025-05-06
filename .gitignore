@@ -6,3 +6,4 @@ trained_models/
 checkpoints/
 *.txt
 *.pickle
+rec/
