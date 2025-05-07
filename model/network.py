@@ -464,8 +464,6 @@ class FeatureUNet(nn.Module):
             nn.ReLU(),
         )
 
-
-
         self.bottom_layer = nn.Sequential(
             nn.Conv2d(in_channels=out_channel * 2, out_channels=out_channel, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
@@ -747,8 +745,6 @@ class FeatureUNet(nn.Module):
 
         # bottom conv feature
 
-        print("LAST ERROR")
-        print(feature_downsample_3_next_in.shape,lr_hsi_feature_iter_3.shape)
         feature_bottom = self.bottom_layer(
             # upsample_feature_3 = self.bottom_layer(
             torch.cat([feature_downsample_3_next_in, lr_hsi_feature_iter_3], dim=1)
@@ -1093,19 +1089,19 @@ class LrHSIDictionaryWH(nn.Module):
 
     def forward(self, x):
         # batch, channel, height, weight = list(x.size())
-        print(f"in lrHSIDict - {x.size()}")
+        print(f"in lrHSIDict - {x.size()}") if 0 else None
         nx = x.permute(0, 2, 1, 3)
-        print(f"in lrHSIDict - {nx.size()}")
+        print(f"in lrHSIDict - {nx.size()}") if 0 else None
         nx = self.conv_w(nx)
-        print(f"in lrHSIDict - {nx.size()}")
+        print(f"in lrHSIDict - {nx.size()}") if 0 else None
         nx = nx.permute(0, 2, 1, 3)
-        print(f"in lrHSIDict - {nx.size()}")
+        print(f"in lrHSIDict - {nx.size()}") if 0 else None
         nx = nx.permute(0, 3, 2, 1)
-        print(f"in lrHSIDict - {nx.size()}")
+        print(f"in lrHSIDict - {nx.size()}") if 0 else None
         nx = self.conv_h(nx)
-        print(f"in lrHSIDict - {nx.size()}")
+        print(f"in lrHSIDict - {nx.size()}") if 0 else None
         nx = nx.permute(0, 3, 2, 1)
-        print(f"in lrHSIDict - {nx.size()}")
+        print(f"in lrHSIDict - {nx.size()}") if 0 else None
         return nx
 
 
@@ -1155,7 +1151,6 @@ class LrHSIDictionaryS(nn.Module):
         self.conv_s = nn.Conv2d(code_scale[2], hsi_scale_s, kernel_size=1, stride=1, padding=0, bias=False)
         
     def forward(self, x):
-        print("in LrHSIDictionaryS, input size", x.size())
         # batch, channel, height, weight = list(x.size())
         return self.conv_s(x).clamp_(0, 1)
 

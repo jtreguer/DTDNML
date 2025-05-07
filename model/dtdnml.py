@@ -243,7 +243,6 @@ class DTDNML(BaseModel):
     def set_input(self, input, isTrain=True):
         if isTrain:
             self.real_lhsi = Variable(input["lhsi"], requires_grad=True).to(self.device)
-            print(f"self.real_lhsi {self.real_lhsi.shape}")
             self.real_hmsi = Variable(input["hmsi"], requires_grad=True).to(self.device)
             self.real_hhsi = Variable(input["hhsi"], requires_grad=True).to(self.device)
             self.manifold = Variable(input["sm"], requires_grad=True).to(self.device)
@@ -276,14 +275,14 @@ class DTDNML(BaseModel):
     def my_forward(self, epoch):
         # generate code tensor from LrHSI or HrMSI
         self.code_tensor_lr = self.lrhsi_feature(self.real_lhsi)
-        print("1",self.code_tensor_lr.shape)
+        print("1",self.code_tensor_lr.shape) if self.opt.debug else None
         self.code_tensor = self.hrmsi_feature(self.real_hmsi)
-        print("2",self.code_tensor.shape)        
+        print("2",self.code_tensor.shape) if self.opt.debug else None        
         self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr, epoch)
         # self.code_tensor = self.feature_unet(self.code_tensor, self.code_tensor_lr)
-        print(self.code_tensor.shape)
+        print(self.code_tensor.shape) if self.opt.debug else None
 
-        print("self.lr_hsi_dict_wh(self.code_tensor).shape", self.lr_hsi_dict_wh(self.code_tensor).shape)
+        print("self.lr_hsi_dict_wh(self.code_tensor).shape", self.lr_hsi_dict_wh(self.code_tensor).shape) if self.opt.debug else None
         # print(self.hr_msi_dict_wh(self.code_tensor).shape)
         # print(self.hr_msi_dict_wh(self.code_tensor).shape)
         # print(self.lr_hsi_dict_wh(self.code_tensor).shape)
@@ -298,21 +297,21 @@ class DTDNML(BaseModel):
                 self.lr_hsi_dict_wh(self.code_tensor_lr)
             )
 
-        print("rec lrhsi", self.rec_lrhsi.shape)
+        print("rec lrhsi", self.rec_lrhsi.shape) if self.opt.debug else None
         # JT
         self.rec_lrhsi = self.rec_lrhsi.permute(0,1,3,2)
-        print("rec lrhsi", self.rec_lrhsi.shape)
+        print("rec lrhsi", self.rec_lrhsi.shape) if self.opt.debug else None
 
         # 重建hr-msi
         self.rec_hrmsi = self.hr_msi_dict_s(self.hr_msi_dict_wh(self.code_tensor))
-        print("rec hrmsi", self.rec_hrmsi.shape)
+        print("rec hrmsi", self.rec_hrmsi.shape) if self.opt.debug else None
 
         # JT
         self.rec_hrmsi = self.rec_hrmsi.permute(0,1,3,2)
 
         # 重建hr-hsi
         self.rec_hrhsi = self.lr_hsi_dict_s(self.hr_msi_dict_wh(self.code_tensor))
-        print("rec hrhsi", self.rec_hrhsi.shape)
+        print("rec hrhsi", self.rec_hrhsi.shape) if self.opt.debug else None
         # JT
         self.rec_hrhsi = self.rec_hrhsi.permute(0,1,3,2)
 
@@ -326,15 +325,15 @@ class DTDNML(BaseModel):
         self.rec_hsi_lrhsi = self.psf_2(self.rec_hrhsi)
         self.rec_hsi_hrmsi = self.srf(self.rec_hrhsi)
 
-        print("rec hsi lrhsi", self.rec_hsi_lrhsi.shape)
-        print("rec hsi hrmsi", self.rec_hsi_hrmsi.shape)
+        print("rec hsi lrhsi", self.rec_hsi_lrhsi.shape) if self.opt.debug else None
+        print("rec hsi hrmsi", self.rec_hsi_hrmsi.shape) if self.opt.debug else None
 
         # 构建lr-msi
         self.rec_lrhsi_lrmsi = self.srf(self.real_lhsi)
         self.rec_hrmsi_lrmsi = self.psf_2(self.real_hmsi)
 
-        print("self.rec_lrhsi_lrmsi", self.rec_lrhsi_lrmsi.size())
-        print("self.rec_hrmsi_lrmsi", self.rec_hrmsi_lrmsi.size())
+        print("self.rec_lrhsi_lrmsi", self.rec_lrhsi_lrmsi.size()) if self.opt.debug else None
+        print("self.rec_hrmsi_lrmsi", self.rec_hrmsi_lrmsi.size()) if self.opt.debug else None
 
         self.visual_corresponding_name["real_lhsi"] = "rec_lrhsi"
         self.visual_corresponding_name["real_hmsi"] = "rec_hrmsi"
@@ -518,6 +517,22 @@ class DTDNML(BaseModel):
             self.optimizer_srf.zero_grad()
 
         self.my_backward_g_joint(epoch)
+
+            # Add gradient clipping here for all network components
+        networks_to_clip = [
+            self.lrhsi_feature,
+            self.hrmsi_feature,
+            self.feature_unet,
+            self.lr_hsi_dict_s,
+            self.lr_hsi_dict_wh,
+            self.hr_msi_dict_wh,
+            self.psf_2,
+            self.srf
+         ]
+    
+        for net in networks_to_clip:
+          if net is not None:
+            torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=1.0)
 
         self.optimizer_lrhsi_feature.step()
         self.optimizer_lr_hsi_dict_wh.step()

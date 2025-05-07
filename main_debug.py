@@ -18,6 +18,7 @@ from options.train_options import TrainOptions
 from utils.visualizer import Visualizer
 from utils.util import load_checkpoint, save_checkpoint
 import scipy.io as sio
+import math
 import numpy as np
 import random
 from tqdm import tqdm
@@ -31,20 +32,42 @@ def setup_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
     
-setup_seed(5)
+def check_gradients(model):
+    # Access the network modules defined in DTDNML
+    for name in model.model_names:  # This is available from BaseModel
+        if isinstance(name, str):
+            net = getattr(model, name)
+            if net is not None:
+                for param_name, param in net.named_parameters():
+                    if param.grad is not None:
+                        grad_norm = param.grad.norm()
+                        if torch.isnan(grad_norm):
+                            print(f"NaN gradient in {name}.{param_name}")
+                            return False
+    return True
+
+
+def is_nan(value):
+    if torch.is_tensor(value):
+        return torch.isnan(value).any()
+    return math.isnan(value) if isinstance(value, float) else False
+
 
 if __name__ == "__main__":
+
+    setup_seed(5)
 
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
     start_time = time.time()
 
     train_opt = TrainOptions().parse()
+    train_opt.debug = False
 
-    train_opt.niter = 900
-    train_opt.niter_decay = 2100
-    train_opt.lr = 1e-2
-    train_opt.lr_decay_iters = 300
+    train_opt.niter = 3000
+    train_opt.niter_decay = 7000
+    train_opt.lr = 1e-3
+    train_opt.lr_decay_iters = 1000
     train_opt.display_port = 8097
     
     """KSC"""
@@ -98,11 +121,11 @@ if __name__ == "__main__":
     # # train_opt.mat_name = 'fake_and_real_beers_ms'
     # train_opt.mat_name = 'feathers_ms'
     
-    train_opt.scale_factor = 4 #4 #8
-    train_opt.num_theta = 30
-    train_opt.core_tensor_dim = 64
+    train_opt.scale_factor = 8 #4 #8
+    train_opt.num_theta = 15 # 30
+    train_opt.core_tensor_dim = 16
     train_opt.print_freq = 1
-    train_opt.save_freq = 1 #100
+    train_opt.save_freq = 10 #100
     train_opt.batchsize = 1
     train_opt.which_epoch = train_opt.niter + train_opt.niter_decay
     # train_opt.which_epoch = 20000
@@ -116,8 +139,8 @@ if __name__ == "__main__":
     # trade-off parameters: could be better tuned
     # for auto-reconstruction
     train_opt.lambda_A = 0.1
-    train_opt.lambda_B = 1e-1 # 1e-3 # 1e-2 # spectral manifold 
-    train_opt.lambda_C = 1e-2 # 1e-4 # 1e-3 # spatial manifold
+    train_opt.lambda_B = 1e-2 # 1e-3 # 1e-2 # spectral manifold 
+    train_opt.lambda_C = 1e-3 # 1e-4 # 1e-3 # spatial manifold
     train_opt.lambda_F = 100
 
     train_dataloader = get_dataloader(train_opt, isTrain=True)
@@ -159,13 +182,14 @@ if __name__ == "__main__":
     if checkpoint is not None:
       filename = checkpoint
       print(f'Using check_point: {checkpoint}')
+      checkpoint_index = 500
       # cp = torch.load(checkpoint)
       # train_model.load_state_dict(cp['model'],strict=False)  
       # train_model.optimizers.load_state_dict(cp['optimizer']) 
       # train_model.schedulers.load_state_dict(cp['scheduler'])
       # hist_batch_loss = cp['hist_batch_loss']
       # hist_epoch_loss = cp['hist_epoch_loss']
-      train_model.load_networks(2720)
+      train_model.load_networks(checkpoint_index)
 
     # torch.cuda.empty_cache()
 
@@ -186,8 +210,6 @@ if __name__ == "__main__":
 
             visualizer.reset()
 
-            print("Visualizer reset")
-
             train_model.set_input(data, isTrain=True)
             train_model.optimize_joint_parameters(epoch)
 
@@ -199,6 +221,18 @@ if __name__ == "__main__":
 
             if epoch % train_opt.print_freq == 0:
                 losses = train_model.get_current_losses()
+
+                # Check losses not nans
+                if any(is_nan(loss) for loss in losses.values()):
+                  print(f"NaN detected in losses at epoch {epoch}")
+                  # Consider early stopping or reducing learning rate
+                # Check gradients
+                if not check_gradients(train_model):
+                  print(f"NaN gradients detected at epoch {epoch}")
+                  # Optional: implement early stopping or gradient clipping
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+
                 t = (time.time() - iter_start_time) / train_opt.batchsize
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t)
                 if train_opt.display_id > 0:

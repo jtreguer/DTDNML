@@ -68,6 +68,15 @@ class Dataset(data.Dataset):
         self.img_lr_list = []
         self.img_msi_list = []
 
+         # Calculate global min/max across all images
+        all_mins = []
+        all_maxs = []
+        for img in self.img_list:
+           all_mins.append(np.min(img))
+           all_maxs.append(np.max(img))
+        self.global_min = min(all_mins)
+        self.global_max = max(all_maxs)
+
         for i, img in enumerate(self.img_list):
             (h, w, c) = img.shape
             s = self.args.scale_factor
@@ -79,10 +88,14 @@ class Dataset(data.Dataset):
                 :,
             ]
             # Normalization of patch
-            img_patch = (img_patch - np.min(img_patch)) / (np.max(img_patch) - np.min(img_patch))
+            # img_patch = (img_patch - np.min(img_patch)) / (np.max(img_patch) - np.min(img_patch))
+            img_patch = self.normalize_image(img_patch, self.global_min, self.global_max)
             self.img_patch_list.append(img_patch)
             "LrHSI"
             img_lr = self.generate_LrHSI(img_patch, s)
+            
+            # img_lr = self.normalize_image(img_lr)
+            
             # sigmah = np.sqrt(np.sum(img_lr)**2 / (10 ** (SNR/10)) / (r_h*r_w*c))
             # img_lr_noise = img_lr + sigmah * np.random.normal(size=no.shape(img_lr))
             print(f"img_lr.shape {img_lr.shape}")
@@ -115,6 +128,23 @@ class Dataset(data.Dataset):
             # io.savemat(r"D:\\Dataset\\MIAE\\MIAE\\data\\pavia\\paviac_data_r80.mat", {'MSI':img_msi,'HSI':img_lr, 'REF':img_patch})
             # io.savemat(r"D:\\Dataset\\MIAE\\MIAE\\data\\pavia\\{}_r80.mat".format("img1"), {'MSI':img_msi,'HSI':img_lr, 'REF':img_patch})
             print("Dataset initialized")
+
+    def normalize_image(self, img, global_min=None, global_max=None):
+      """
+      Normalize image to [0,1] range
+      Args:
+         img: Input image
+         global_min: Optional global minimum for consistent normalization
+         global_max: Optional global maximum for consistent normalization
+      """
+      if global_min is None:
+         global_min = np.min(img)
+      if global_max is None:
+         global_max = np.max(img)
+      
+      normalized = (img - global_min) / (global_max - global_min + 1e-8)  # Add epsilon to avoid division by zero
+      return np.clip(normalized, 0, 1)  # Ensure values are in [0,1]
+
 
 
     # UNUSED
