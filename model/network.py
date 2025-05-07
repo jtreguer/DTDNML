@@ -673,6 +673,7 @@ class FeatureUNet(nn.Module):
 
         # downsample 3
         feature_downsample_3 = self.relu(feature_downsample_2_next_in + self.down_sample_conv_list_3(feature_downsample_2_next_in))
+        # print("feature_downsample3", feature_downsample_3.shape)
         # feature_downsample_3 = self.relu(feature_downsample_2_next_in + self.msi_crate_3(feature_downsample_2_next_in))
         # lr_hsi_feature_iter_3 = self.lr_hsi_compress_3(lr_hsi_feature_iter_2)
         # lr_hsi_feature_iter_3 = lr_hsi_feature_iter_2
@@ -695,6 +696,8 @@ class FeatureUNet(nn.Module):
             lr_hsi_feature_iter_3, spe_attn_3 = self.ssab3(lr_hsi_feature_iter_3) # spe_attn_1: [C, C]
             _,c,h,w = feature_downsample_3.shape
             feature_downsample_3 = ((feature_downsample_3.squeeze().reshape([c, h*w]).T) @ spe_attn_3).T.reshape(c, h, w).unsqueeze(0)
+        
+        # print("feature_downsample3", feature_downsample_3.shape)
 
         feature_downsample_3_next_in = self.dowmsample_3(feature_downsample_3)
 
@@ -744,6 +747,8 @@ class FeatureUNet(nn.Module):
 
         # bottom conv feature
 
+        print("LAST ERROR")
+        print(feature_downsample_3_next_in.shape,lr_hsi_feature_iter_3.shape)
         feature_bottom = self.bottom_layer(
             # upsample_feature_3 = self.bottom_layer(
             torch.cat([feature_downsample_3_next_in, lr_hsi_feature_iter_3], dim=1)

@@ -34,6 +34,7 @@ setup_seed(5)
 if __name__ == "__main__":
 
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+    torch.cuda.empty_cache()
 
     start_time = time.time()
 
@@ -156,13 +157,11 @@ if __name__ == "__main__":
       # train_model.schedulers.load_state_dict(cp['scheduler'])
       # hist_batch_loss = cp['hist_batch_loss']
       # hist_epoch_loss = cp['hist_epoch_loss']
-      train_model.load_networks(1000)
+      train_model.load_networks(700)
 
     train_model.isTrain = False
    
     print("current model isTrain", train_model.isTrain)
-
-    # torch.cuda.empty_cache()
 
     data = next(iter(train_dataloader))
 

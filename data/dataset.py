@@ -47,7 +47,7 @@ class Dataset(data.Dataset):
             with rasterio.open(file_path) as src:
                 print("Reading HS data")
                 hyperspectral_data = src.read()
-                hyperspectral_data = hyperspectral_data[:,400:400+512,100:100+512]
+                hyperspectral_data = hyperspectral_data[:,args.start_x_pixel:args.start_x_pixel+args.window_size,args.start_y_pixel:args.start_y_pixel+args.window_size]
 
                 # Display information about the hyperspectral data
                 print('Shape of hyperspectral data:', hyperspectral_data.shape)

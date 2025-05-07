@@ -42,9 +42,11 @@ def get_sp_range(sp_matrix):
 
 class DatasetDataLoader():
     def init(self, arg, isTrain=True):
+        # JT
         header_file = os.path.join(os.getcwd(), arg.data_path_name, arg.data_img_name +'.hdr')
         header_spectral = spectral.open_image(header_file)
         self.wavelengths = header_spectral.bands.centers
+        # JT
         self.sp_matrix = self.get_spectral_response(arg.data_path_name, arg.srf_name)
         self.sp_range = get_sp_range(self.sp_matrix)
         self.dataset = create_dataset(arg, self.sp_matrix, isTrain)

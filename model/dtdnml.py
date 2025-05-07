@@ -71,7 +71,7 @@ class DTDNML(BaseModel):
         num_s = self.opt.num_theta
         ngf = 64
         
-        code_tensor_scale = [500, 500, num_s]
+        code_tensor_scale = [opt.core_tensor_dim, opt.core_tensor_dim, num_s]
         # code_tensor_scale = [512, 512, num_s]
         code_tensor_scale_lr = [int(lrhsi_hei), int(lrhsi_hei), num_s]
         H, W = int(lrhsi_hei * self.opt.scale_factor), int(

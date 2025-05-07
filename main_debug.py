@@ -41,10 +41,10 @@ if __name__ == "__main__":
 
     train_opt = TrainOptions().parse()
 
-    train_opt.niter = 3000
-    train_opt.niter_decay = 7000
-    train_opt.lr = 5e-3
-    train_opt.lr_decay_iters = 1000
+    train_opt.niter = 900
+    train_opt.niter_decay = 2100
+    train_opt.lr = 1e-2
+    train_opt.lr_decay_iters = 300
     train_opt.display_port = 8097
     
     """KSC"""
@@ -54,10 +54,13 @@ if __name__ == "__main__":
     # train_opt.mat_name = "KSC"
 
     """Sandiego"""
-    train_opt.name = 'sandiego_scale_8'
+    train_opt.name = 'sandiego_scale_4' #'sandiego_scale_8'
     train_opt.data_path_name = "sandiego"
     train_opt.data_img_name = "sandiego_ort"
     train_opt.srf_name = "Landsat8_BGRI_SRF"  # 'Landsat8_BGR'
+    train_opt.start_x_pixel = 800
+    train_opt.start_y_pixel = 200
+    train_opt.window_size = 64
     
     """chikusei"""
     # train_opt.name = 'chikusei_scale_8'
@@ -95,17 +98,17 @@ if __name__ == "__main__":
     # # train_opt.mat_name = 'fake_and_real_beers_ms'
     # train_opt.mat_name = 'feathers_ms'
     
-    train_opt.scale_factor = 8
+    train_opt.scale_factor = 4 #4 #8
     train_opt.num_theta = 30
-    train_opt.core_tensor_dim = 500
+    train_opt.core_tensor_dim = 64
     train_opt.print_freq = 1
-    train_opt.save_freq = 100
+    train_opt.save_freq = 1 #100
     train_opt.batchsize = 1
     train_opt.which_epoch = train_opt.niter + train_opt.niter_decay
     # train_opt.which_epoch = 20000
     # train_opt.continue_train = True
     train_opt.attention_use = True
-    train_opt.useSoftmax = 'No'
+    train_opt.useSoftmax = 'No' # No
     train_opt.isCalSP = 'Yes'
     train_opt.concat = 'Yes'
     train_opt.display_port = 8097
@@ -113,8 +116,8 @@ if __name__ == "__main__":
     # trade-off parameters: could be better tuned
     # for auto-reconstruction
     train_opt.lambda_A = 0.1
-    train_opt.lambda_B = 0 # 1e-3 # 1e-2 # spectral manifold
-    train_opt.lambda_C = 0 # 1e-4 # 1e-3 # spatial manifold
+    train_opt.lambda_B = 1e-1 # 1e-3 # 1e-2 # spectral manifold 
+    train_opt.lambda_C = 1e-2 # 1e-4 # 1e-3 # spatial manifold
     train_opt.lambda_F = 100
 
     train_dataloader = get_dataloader(train_opt, isTrain=True)
@@ -131,6 +134,8 @@ if __name__ == "__main__":
 
     train_model.setup(train_opt)
 
+    print("current model isTrain", train_model.isTrain)
+
     print(f"Using device {train_model.device}")
     visualizer = Visualizer(train_opt, train_dataloader.sp_matrix)
 
@@ -141,7 +146,7 @@ if __name__ == "__main__":
     print(train_opt.niter + train_opt.niter_decay + 1)
 
     checkpoint = None
-    checkpoint = './checkpoints'
+    # checkpoint = './checkpoints'
 
     if checkpoint is None:
       print("No checkpoint - starting training from scratch")
@@ -162,9 +167,10 @@ if __name__ == "__main__":
       # hist_epoch_loss = cp['hist_epoch_loss']
       train_model.load_networks(2720)
 
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
 
-    for epoch in tqdm(range(train_opt.epoch_count, train_opt.niter + train_opt.niter_decay + 1)):
+
+    for epoch in tqdm(range(train_opt.epoch_count, train_opt.which_epoch+ 1)):
     
         epoch_start_time = time.time()
         iter_data_time = time.time()
