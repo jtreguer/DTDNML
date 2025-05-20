@@ -72,11 +72,13 @@ class DatasetDataLoader():
         data = xlrd.open_workbook(xls_path)
         srf = data.sheets()[0]
         srf_arr = np.array([srf.col_values(i) for i in range(srf.ncols)]).T
-        sp_matrix = np.empty((len(self.wavelengths),srf.ncols),dtype=np.float32)
-        for i in range(1,srf.ncols):
-            sp_matrix[:,i] = np.interp(self.wavelengths, srf_arr[:,0], srf_arr[:,i],left=0, right=0)
+        sp_matrix = np.empty((len(self.wavelengths),srf.ncols-1),dtype=np.float32)
+        print(srf.ncols)
+        for i in range(1,srf.ncols): # start from 1 to exclude 1st column = wavelengths
+            sp_matrix[:,i-1] = np.interp(self.wavelengths, srf_arr[:,0], srf_arr[:,i],left=0, right=0)
         print(f"sp_matrix.shape {sp_matrix.shape}")
-        return sp_matrix
+        print(f"Min and max of sp_matrix {np.min(sp_matrix / sp_matrix.sum(axis=0))}, {np.max(sp_matrix/ sp_matrix.sum(axis=0))}")
+        return sp_matrix / sp_matrix.sum(axis=0)
 
 
 def get_dataloader(arg, isTrain=True):

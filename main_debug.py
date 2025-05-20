@@ -17,7 +17,6 @@ from model import create_model
 from options.train_options import TrainOptions
 from utils.visualizer import Visualizer
 from utils.util import load_checkpoint, save_checkpoint
-import scipy.io as sio
 import math
 import numpy as np
 import random
@@ -64,11 +63,20 @@ if __name__ == "__main__":
     train_opt = TrainOptions().parse()
     train_opt.debug = False
 
-    train_opt.niter = 3000
-    train_opt.niter_decay = 7000
-    train_opt.lr = 1e-3
-    train_opt.lr_decay_iters = 1000
+    if 0:
+        train_opt.lr_policy = "plateau"
+    if 1:
+        train_opt.lr_policy = "step"
+        train_opt.lr_decay_gamma = 0.95
+        
+    print(f"LR policy {train_opt.lr_policy}")
+
+    train_opt.niter = 6000
+    train_opt.niter_decay = 14000
+    train_opt.lr = 1e-4
+    train_opt.lr_decay_iters = 1000 # step size for decay
     train_opt.display_port = 8097
+    
     
     """KSC"""
     # train_opt.name = 'ksc_scale_8'
@@ -77,7 +85,7 @@ if __name__ == "__main__":
     # train_opt.mat_name = "KSC"
 
     """Sandiego"""
-    train_opt.name = 'sandiego_scale_4' #'sandiego_scale_8'
+    train_opt.name = 'sandiego_scale_8_2' #'sandiego_scale_8'
     train_opt.data_path_name = "sandiego"
     train_opt.data_img_name = "sandiego_ort"
     train_opt.srf_name = "Landsat8_BGRI_SRF"  # 'Landsat8_BGR'
@@ -122,14 +130,16 @@ if __name__ == "__main__":
     # train_opt.mat_name = 'feathers_ms'
     
     train_opt.scale_factor = 8 #4 #8
-    train_opt.num_theta = 15 # 30
-    train_opt.core_tensor_dim = 16
+    train_opt.num_theta = 30 # 30 number of channels
+    train_opt.core_tensor_dim = 64 # = 0.85*64
     train_opt.print_freq = 1
-    train_opt.save_freq = 10 #100
+    train_opt.save_freq = 100 #100
     train_opt.batchsize = 1
     train_opt.which_epoch = train_opt.niter + train_opt.niter_decay
+    train_opt.gradient_clip = 1e9
     # train_opt.which_epoch = 20000
     # train_opt.continue_train = True
+
     train_opt.attention_use = True
     train_opt.useSoftmax = 'No' # No
     train_opt.isCalSP = 'Yes'
@@ -138,10 +148,11 @@ if __name__ == "__main__":
 
     # trade-off parameters: could be better tuned
     # for auto-reconstruction
-    train_opt.lambda_A = 0.1
-    train_opt.lambda_B = 1e-2 # 1e-3 # 1e-2 # spectral manifold 
-    train_opt.lambda_C = 1e-3 # 1e-4 # 1e-3 # spatial manifold
-    train_opt.lambda_F = 100
+    train_opt.lambda_A = 0.1 # alpha PSF SRF
+    train_opt.lambda_B = 1e-3 # 1e-3 # 1e-2 # spectral manifold beta_1
+    train_opt.lambda_C = 1e-2 # 1e-4 # 1e-3 # spatial manifold beta_2
+    train_opt.lambda_F = None # 100
+    print("Lambda D", train_opt.lambda_D)
 
     train_dataloader = get_dataloader(train_opt, isTrain=True)
     dataset_size = len(train_dataloader)
@@ -182,7 +193,8 @@ if __name__ == "__main__":
     if checkpoint is not None:
       filename = checkpoint
       print(f'Using check_point: {checkpoint}')
-      checkpoint_index = 500
+      checkpoint_index = 10000
+      train_opt.epoch_count = checkpoint_index + 1
       # cp = torch.load(checkpoint)
       # train_model.load_state_dict(cp['model'],strict=False)  
       # train_model.optimizers.load_state_dict(cp['optimizer']) 
@@ -190,11 +202,11 @@ if __name__ == "__main__":
       # hist_batch_loss = cp['hist_batch_loss']
       # hist_epoch_loss = cp['hist_epoch_loss']
       train_model.load_networks(checkpoint_index)
-
+      
     # torch.cuda.empty_cache()
 
 
-    for epoch in tqdm(range(train_opt.epoch_count, train_opt.which_epoch+ 1)):
+    for epoch in tqdm(range(train_opt.epoch_count, train_opt.which_epoch+ train_opt.epoch_count)):
     
         epoch_start_time = time.time()
         iter_data_time = time.time()

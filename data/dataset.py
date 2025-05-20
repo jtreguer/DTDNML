@@ -77,7 +77,7 @@ class Dataset(data.Dataset):
         self.global_min = min(all_mins)
         self.global_max = max(all_maxs)
 
-        for i, img in enumerate(self.img_list):
+        for _, img in enumerate(self.img_list):
             (h, w, c) = img.shape
             s = self.args.scale_factor
             "Ensure that the side length can be divisible"
@@ -128,6 +128,8 @@ class Dataset(data.Dataset):
             # io.savemat(r"D:\\Dataset\\MIAE\\MIAE\\data\\pavia\\paviac_data_r80.mat", {'MSI':img_msi,'HSI':img_lr, 'REF':img_patch})
             # io.savemat(r"D:\\Dataset\\MIAE\\MIAE\\data\\pavia\\{}_r80.mat".format("img1"), {'MSI':img_msi,'HSI':img_lr, 'REF':img_patch})
             print("Dataset initialized")
+            print(type(img_lr))
+            print(f"min max of input images {np.max(img_lr)}, {np.min(img_lr)}, {np.max(img_msi)}, {np.min(img_msi)}, {np.max(img_patch)}")
 
     def normalize_image(self, img, global_min=None, global_max=None):
       """
@@ -234,9 +236,7 @@ class Dataset(data.Dataset):
         (h, w, c) = img.shape
         self.msi_channels = sp_matrix.shape[1]
         if sp_matrix.shape[0] == c:
-            img_msi = np.dot(img.reshape(w * h, c), sp_matrix).reshape(
-                h, w, sp_matrix.shape[1]
-            )
+            img_msi = np.dot(img.reshape(w * h, c), sp_matrix).reshape(h, w, sp_matrix.shape[1])
         else:
             raise Exception("The shape of sp matrix does not match the image")
         # np.random.seed(10)

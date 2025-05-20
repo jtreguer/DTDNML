@@ -5,7 +5,6 @@ import torch
 import torch.nn
 from torch.autograd import Variable
 import itertools
-import os
 from . import network
 from .base_model import BaseModel
 import numpy as np
@@ -324,6 +323,10 @@ class DTDNML(BaseModel):
         # self.rec_hsi_hrmsi = self.hr_msi_dict_wh(self.srf(self.lr_hsi_dict_s(self.code_tensor)))
         self.rec_hsi_lrhsi = self.psf_2(self.rec_hrhsi)
         self.rec_hsi_hrmsi = self.srf(self.rec_hrhsi)
+        print(f"min max of reconstructed images {torch.max(self.rec_hsi_lrhsi)},\
+               {torch.min(self.rec_hsi_lrhsi)}, \
+               {torch.max(self.rec_hsi_hrmsi)}, \
+                 {torch.min(self.rec_hsi_hrmsi)}")  if self.opt.debug else None
 
         print("rec hsi lrhsi", self.rec_hsi_lrhsi.shape) if self.opt.debug else None
         print("rec hsi hrmsi", self.rec_hsi_hrmsi.shape) if self.opt.debug else None
@@ -518,7 +521,7 @@ class DTDNML(BaseModel):
 
         self.my_backward_g_joint(epoch)
 
-            # Add gradient clipping here for all network components
+        # Add gradient clipping here for all network components
         networks_to_clip = [
             self.lrhsi_feature,
             self.hrmsi_feature,
@@ -532,8 +535,10 @@ class DTDNML(BaseModel):
     
         for net in networks_to_clip:
           if net is not None:
-            torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=1.0)
+            torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=self.opt.gradient_clip)
 
+
+        # Update parameters
         self.optimizer_lrhsi_feature.step()
         self.optimizer_lr_hsi_dict_wh.step()
         self.optimizer_lr_hsi_dict_s.step()
