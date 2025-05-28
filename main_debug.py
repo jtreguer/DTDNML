@@ -71,10 +71,10 @@ if __name__ == "__main__":
         
     print(f"LR policy {train_opt.lr_policy}")
 
-    train_opt.niter = 6000
-    train_opt.niter_decay = 14000
-    train_opt.lr = 1e-4
-    train_opt.lr_decay_iters = 1000 # step size for decay
+    train_opt.niter = 9000
+    train_opt.niter_decay = 11000
+    train_opt.lr = 1e-3
+    train_opt.lr_decay_iters = 10000 # step size for decay
     train_opt.display_port = 8097
     
     
@@ -85,7 +85,8 @@ if __name__ == "__main__":
     # train_opt.mat_name = "KSC"
 
     """Sandiego"""
-    train_opt.name = 'sandiego_scale_8_2' #'sandiego_scale_8'
+    # train_opt.name = 'sandiego_scale_8_2' #'sandiego_scale_8'
+    train_opt.name = 'sandiego_scale_8_3' #'sandiego_scale_8'
     train_opt.data_path_name = "sandiego"
     train_opt.data_img_name = "sandiego_ort"
     train_opt.srf_name = "Landsat8_BGRI_SRF"  # 'Landsat8_BGR'
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     
     train_opt.scale_factor = 8 #4 #8
     train_opt.num_theta = 30 # 30 number of channels
-    train_opt.core_tensor_dim = 64 # = 0.85*64
+    train_opt.core_tensor_dim = 54 # = 0.85*64
     train_opt.print_freq = 1
     train_opt.save_freq = 100 #100
     train_opt.batchsize = 1
@@ -149,8 +150,8 @@ if __name__ == "__main__":
     # trade-off parameters: could be better tuned
     # for auto-reconstruction
     train_opt.lambda_A = 0.1 # alpha PSF SRF
-    train_opt.lambda_B = 1e-3 # 1e-3 # 1e-2 # spectral manifold beta_1
-    train_opt.lambda_C = 1e-2 # 1e-4 # 1e-3 # spatial manifold beta_2
+    train_opt.lambda_B = 1e-3 #1e-3 # 1e-3 # 1e-2 # spectral manifold beta_1
+    train_opt.lambda_C = 1e-2 # 1e-2 # 1e-4 # 1e-3 # spatial manifold beta_2
     train_opt.lambda_F = None # 100
     print("Lambda D", train_opt.lambda_D)
 
@@ -193,7 +194,7 @@ if __name__ == "__main__":
     if checkpoint is not None:
       filename = checkpoint
       print(f'Using check_point: {checkpoint}')
-      checkpoint_index = 10000
+      checkpoint_index = 20000
       train_opt.epoch_count = checkpoint_index + 1
       # cp = torch.load(checkpoint)
       # train_model.load_state_dict(cp['model'],strict=False)  

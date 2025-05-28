@@ -39,6 +39,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     train_opt = TrainOptions().parse()
+    train_opt.debug = False
 
     train_opt.niter = 3000
     train_opt.niter_decay = 7000
@@ -53,10 +54,13 @@ if __name__ == "__main__":
     # train_opt.mat_name = "KSC"
 
     """Sandiego"""
-    train_opt.name = 'sandiego_scale_8'
+    train_opt.name = 'sandiego_scale_8_2'
     train_opt.data_path_name = "sandiego"
     train_opt.data_img_name = "sandiego_ort"
     train_opt.srf_name = "Landsat8_BGRI_SRF"  # 'Landsat8_BGR'
+    train_opt.start_x_pixel = 800
+    train_opt.start_y_pixel = 200
+    train_opt.window_size = 64
     
     """chikusei"""
     # train_opt.name = 'chikusei_scale_8'
@@ -96,6 +100,7 @@ if __name__ == "__main__":
     
     train_opt.scale_factor = 8
     train_opt.num_theta = 30
+    train_opt.core_tensor_dim = 64 # = 0.85*64
     train_opt.print_freq = 1
     train_opt.save_freq = 100
     train_opt.batchsize = 1
@@ -151,13 +156,15 @@ if __name__ == "__main__":
     if checkpoint is not None:
       filename = checkpoint
       print(f'Using check_point: {checkpoint}')
+      checkpoint_index = 21800
+      train_opt.epoch_count = checkpoint_index + 1
       # cp = torch.load(checkpoint)
       # train_model.load_state_dict(cp['model'],strict=False)  
       # train_model.optimizers.load_state_dict(cp['optimizer']) 
       # train_model.schedulers.load_state_dict(cp['scheduler'])
       # hist_batch_loss = cp['hist_batch_loss']
       # hist_epoch_loss = cp['hist_epoch_loss']
-      train_model.load_networks(700)
+      train_model.load_networks(checkpoint_index)
 
     train_model.isTrain = False
    

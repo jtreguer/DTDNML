@@ -18,7 +18,7 @@ class Dataset(data.Dataset):
     patch_size = 64
     SNR = 25
     
-    def __init__(self, args, sp_matrix, isTrain=True):
+    def __init__(self, args, sp_matrix, mask=None, isTrain=True):
         super(Dataset, self).__init__()
 
         self.args = args
@@ -48,10 +48,12 @@ class Dataset(data.Dataset):
                 print("Reading HS data")
                 hyperspectral_data = src.read()
                 hyperspectral_data = hyperspectral_data[:,args.start_x_pixel:args.start_x_pixel+args.window_size,args.start_y_pixel:args.start_y_pixel+args.window_size]
+                if mask is not None:
+                    print("Excluding water bands")
+                    hyperspectral_data = hyperspectral_data[mask,:,:]
 
                 # Display information about the hyperspectral data
                 print('Shape of hyperspectral data:', hyperspectral_data.shape)
-                print('Number of bands:', src.count)
                 self.img_list.append(rearrange(hyperspectral_data, 'c h w -> h w c'))
 
 

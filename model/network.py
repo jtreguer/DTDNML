@@ -314,6 +314,9 @@ class FeatureUNet(nn.Module):
         self.Wc = Wc
         self.Hc = Hc
 
+        # JT
+        self.scale = scale
+
         self.iterations = int(np.log2(scale))
 
         self.ssab1 = SpectralTransformer(in_c=out_channel, dim=out_channel, dim_head=out_channel)
@@ -744,11 +747,16 @@ class FeatureUNet(nn.Module):
         feature_downsample_5_next_in = self.dowmsample_5(feature_downsample_5)"""
 
         # bottom conv feature
-
-        feature_bottom = self.bottom_layer(
-            # upsample_feature_3 = self.bottom_layer(
-            torch.cat([feature_downsample_3_next_in, lr_hsi_feature_iter_3], dim=1)
-        )
+        if self.scale == 4 :
+            feature_bottom = self.bottom_layer(
+                # upsample_feature_2 = self.bottom_layer(
+                torch.cat([feature_downsample_2_next_in, lr_hsi_feature_iter_2], dim=1)
+                )
+        else:
+            feature_bottom = self.bottom_layer(
+                # upsample_feature_3 = self.bottom_layer(
+                torch.cat([feature_downsample_3_next_in, lr_hsi_feature_iter_3], dim=1)
+                )
         transformer = True
 
         """# upsample 5

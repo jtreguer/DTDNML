@@ -26,8 +26,8 @@ def get_spectral_responseOLD(data_name, srf_name):
     sp_data = sp_data / (sp_data.sum(axis=0))
     return sp_data
 
-def create_dataset(arg, sp_matrix, isTRain):
-    dataset_instance = Dataset(arg, sp_matrix, isTRain)
+def create_dataset(arg, sp_matrix, mask, isTRain):
+    dataset_instance = Dataset(arg, sp_matrix, mask, isTRain)
     return dataset_instance
 
 def get_sp_range(sp_matrix):
@@ -41,15 +41,21 @@ def get_sp_range(sp_matrix):
     return sp_range
 
 class DatasetDataLoader():
+
+    water_bands = [363, 376, 730, 820, 930, 970, 1200, 1450, 1950, 2500]
+    tol = 10
+
     def init(self, arg, isTrain=True):
         # JT
         header_file = os.path.join(os.getcwd(), arg.data_path_name, arg.data_img_name +'.hdr')
         header_spectral = spectral.open_image(header_file)
-        self.wavelengths = header_spectral.bands.centers
+        wavelengths_mask = self.exclude_water(header_spectral.bands.centers)
+        self.wavelengths = np.array(header_spectral.bands.centers)[wavelengths_mask]
+        print(f"number of spectrum points {len(self.wavelengths)}")
         # JT
         self.sp_matrix = self.get_spectral_response(arg.data_path_name, arg.srf_name)
         self.sp_range = get_sp_range(self.sp_matrix)
-        self.dataset = create_dataset(arg, self.sp_matrix, isTrain)
+        self.dataset = create_dataset(arg, self.sp_matrix, wavelengths_mask, isTrain)
         self.hsi_channels = self.dataset.hsi_channels
         self.msi_channels = self.dataset.msi_channels
         self.lrhsi_height = self.dataset.lrhsi_height
@@ -79,7 +85,18 @@ class DatasetDataLoader():
         print(f"sp_matrix.shape {sp_matrix.shape}")
         print(f"Min and max of sp_matrix {np.min(sp_matrix / sp_matrix.sum(axis=0))}, {np.max(sp_matrix/ sp_matrix.sum(axis=0))}")
         return sp_matrix / sp_matrix.sum(axis=0)
-
+   
+    def exclude_water(self, wv: list) -> np.array:
+        wv_arr = np.array(wv)
+        wb_arr = np.array(self.water_bands)
+        excluded_indices = []
+        for i in range(len(wb_arr)):
+            excluded_indices.append(np.argwhere(np.abs(wv_arr - wb_arr[i]) < self.tol).tolist())
+            # print(np.abs(wv_arr - wb_arr[i]))
+        unique_list = list(set([x[0] for sub in excluded_indices for x in sub]))
+        mask = np.ones(len(wv), dtype=bool)
+        mask[unique_list] = False
+        return mask
 
 def get_dataloader(arg, isTrain=True):
     instant_dataloader = DatasetDataLoader()
