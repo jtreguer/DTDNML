@@ -8,24 +8,6 @@ import torch
 from .dataset import Dataset
 import spectral
 
-def get_spectral_responseOLD(data_name, srf_name):
-    xls_path = os.path.join(os.getcwd(), data_name, srf_name + '.xls')
-    print(xls_path)
-    if not os.path.exists(xls_path):
-        raise Exception("Spectral response path does not exist!")
-    data = xlrd.open_workbook(xls_path)
-    print(data.sheets())
-    table = data.sheets()[0]
-    num_cols = table.ncols
-    num_cols_sta = 1
-    print(table.col_values(0))
-    print([np.array(table.col_values(i)).reshape(-1,1) for i in range(num_cols_sta,num_cols)])
-    cols_list = [np.array(table.col_values(i)).astype(np.float32).reshape(-1,1) for i in range(num_cols_sta,num_cols)]
-    sp_data = np.concatenate(cols_list, axis=1)
-    # sp_data = sp_data.astype(float)
-    sp_data = sp_data / (sp_data.sum(axis=0))
-    return sp_data
-
 def create_dataset(arg, sp_matrix, mask, isTRain):
     dataset_instance = Dataset(arg, sp_matrix, mask, isTRain)
     return dataset_instance

@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     """Sandiego"""
     # train_opt.name = 'sandiego_scale_8_2' #'sandiego_scale_8'
-    train_opt.name = 'sandiego_scale_8_3' #'sandiego_scale_8'
+    train_opt.name = 'sandiego_scale_4'#'sandiego_scale_8_4' #'sandiego_scale_8'
     train_opt.data_path_name = "sandiego"
     train_opt.data_img_name = "sandiego_ort"
     train_opt.srf_name = "Landsat8_BGRI_SRF"  # 'Landsat8_BGR'
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # # train_opt.mat_name = 'fake_and_real_beers_ms'
     # train_opt.mat_name = 'feathers_ms'
     
-    train_opt.scale_factor = 8 #4 #8
+    train_opt.scale_factor = 4 #4 #8
     train_opt.num_theta = 30 # 30 number of channels
     train_opt.core_tensor_dim = 54 # = 0.85*64
     train_opt.print_freq = 1
@@ -181,7 +181,7 @@ if __name__ == "__main__":
     print(train_opt.niter + train_opt.niter_decay + 1)
 
     checkpoint = None
-    # checkpoint = './checkpoints'
+    #checkpoint = './checkpoints'
 
     if checkpoint is None:
       print("No checkpoint - starting training from scratch")
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     if checkpoint is not None:
       filename = checkpoint
       print(f'Using check_point: {checkpoint}')
-      checkpoint_index = 20000
+      checkpoint_index = 8650
       train_opt.epoch_count = checkpoint_index + 1
       # cp = torch.load(checkpoint)
       # train_model.load_state_dict(cp['model'],strict=False)  

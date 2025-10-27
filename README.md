@@ -9,6 +9,13 @@ Code for the paper: [Unsupervised Hyperspectral and Multispectral Image Blind Fu
 </div>
 
 ## Code Running 
+
+### Launch visdom server
+python -m visdom.server
+
+### Launch training
+python main_debug.py
+
 Simple run `./main.py` or `./bash.sh` demo to implement the fusion of low-resolution hyperspectral image (LR-HSI) and high-resolution multispectral image (HR-MSI) of Sandiego. (Using [PyTorch](https://pytorch.org/) with `Python 3.7` implemented on `Windows` OS or `Linux` OS)
 
 - Before: For the required packages, please refer to detailed `.py` files.

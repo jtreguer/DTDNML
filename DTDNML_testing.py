@@ -215,8 +215,7 @@ if __name__ == "__main__":
     np.save("rec/rec_hsi_hrmsi", rec_hsi_hrmsi)
     
     # Calculer des métriques
-    # Charger des états intermédiaires pour comparaison, visualisations et métriques
-    
+    # Charger des états intermédiaires pour comparaison, visualisations et métriques    
 
     if 0:
       for epoch in tqdm(range(train_opt.epoch_count, train_opt.niter + train_opt.niter_decay + 1)):

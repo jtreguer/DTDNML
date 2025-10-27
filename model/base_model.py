@@ -135,6 +135,7 @@ class BaseModel():
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (which_epoch, name)
                 load_path = os.path.join(self.save_dir, load_filename)
+                print(f"Loading from checkpoint:{load_path}")
                 net = getattr(self, name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module

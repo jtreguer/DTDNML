@@ -827,52 +827,59 @@ class FeatureUNet(nn.Module):
         transformer = True
         # upsample the feature with spatial attention with itself
         # upsample_feature_3 = self.up_sample_conv_3(upsample_feature_4)
-        upsample_feature_3 = self.up_sample_conv_3(feature_bottom)
-        skip_connection_feature_3 = self.skip_connection_3(feature_downsample_3)
-        # first spatial attention from skip feature
-        spatial_avg_out_3 = torch.mean(skip_connection_feature_3, dim=1, keepdim=True)
-        spatial_max_out_3, _ = torch.max(skip_connection_feature_3, dim=1, keepdim=True)
-        spatial_out_3 = torch.cat([spatial_avg_out_3, spatial_max_out_3], dim=1)
-        spatial_out_3 = self.sigmoid(self.conv_1_3x3(spatial_out_3))
-        upsample_feature_3 = upsample_feature_3 * spatial_out_3
-        # second spatial attention from itself
-        spatial_avg_out_3 = torch.mean(upsample_feature_3, dim=1, keepdim=True)
-        spatial_max_out_3, _ = torch.max(upsample_feature_3, dim=1, keepdim=True)
-        spatial_out_3 = torch.cat([spatial_avg_out_3, spatial_max_out_3], dim=1)
-        spatial_out_3 = self.sigmoid(self.conv_1_3x3(spatial_out_3))
-        # if (epoch % 100) == 0:
-        #     # save the feature map
-        #     import scipy.io as sio
-        #     save_mat = {"spatial_out_3":spatial_out_3.data.cpu().float().numpy()}
-        #     sio.savemat(r"D:\\Dataset\\tensor_factorization\\CrossAttention\\checkpoints\\pavia_scale_8\\feature_map_1229\\spatial_attn3_{}.mat".format(epoch), 
-        #                 save_mat)
-        skip_connection_feature_3 = skip_connection_feature_3 * spatial_out_3
-        # spectral attention from lrhsi itself
-        if transformer:
-            avg_channel_4 = self.avg_pool_2d(upsample_feature_3)
-            max_channel_4 = self.max_pool_2d(upsample_feature_3)
-            avg_out_4 = self.fc_4_2(self.relu(self.fc_4_1(avg_channel_4)))
-            max_out_4 = self.fc_4_2(self.relu(self.fc_4_1(max_channel_4)))
-            channel_out_4 = avg_out_4 + max_out_4
-            channel_out_4 = self.sigmoid(channel_out_4)
-            upsample_feature_3 = upsample_feature_3 * channel_out_4
-        else:
-            upsample_feature_3 = ((upsample_feature_3.squeeze().reshape([c, h*w]).T) @ spe_attn_3).T.reshape(c, h, w).unsqueeze(0)
-        # concat the features with spatial attention
-        upsample_feature_3 = self.skip_up_conv_1(
-            torch.cat([upsample_feature_3, skip_connection_feature_3], dim=1)
-        )
-        # if (epoch % 100) == 0:
-        #     # save the feature map
-        #     import scipy.io as sio
-        #     save_mat = {"upsample_feature_3":upsample_feature_3.data.cpu().float().numpy()}
-        #     sio.savemat(r"D:\\Dataset\\tensor_factorization\\CrossAttention\\checkpoints\\pavia_scale_8\\feature_map_1229\\feature_map3_{}.mat".format(epoch), 
-        #                 save_mat)
+
+        if self.scale == 8 : # go deeper
+            upsample_feature_3 = self.up_sample_conv_3(feature_bottom)
+            skip_connection_feature_3 = self.skip_connection_3(feature_downsample_3)
+            # first spatial attention from skip feature
+            spatial_avg_out_3 = torch.mean(skip_connection_feature_3, dim=1, keepdim=True)
+            spatial_max_out_3, _ = torch.max(skip_connection_feature_3, dim=1, keepdim=True)
+            spatial_out_3 = torch.cat([spatial_avg_out_3, spatial_max_out_3], dim=1)
+            spatial_out_3 = self.sigmoid(self.conv_1_3x3(spatial_out_3))
+            print(upsample_feature_3.shape)
+            print(spatial_out_3.shape)
+            upsample_feature_3 = upsample_feature_3 * spatial_out_3
+            # second spatial attention from itself
+            spatial_avg_out_3 = torch.mean(upsample_feature_3, dim=1, keepdim=True)
+            spatial_max_out_3, _ = torch.max(upsample_feature_3, dim=1, keepdim=True)
+            spatial_out_3 = torch.cat([spatial_avg_out_3, spatial_max_out_3], dim=1)
+            spatial_out_3 = self.sigmoid(self.conv_1_3x3(spatial_out_3))
+            # if (epoch % 100) == 0:
+            #     # save the feature map
+            #     import scipy.io as sio
+            #     save_mat = {"spatial_out_3":spatial_out_3.data.cpu().float().numpy()}
+            #     sio.savemat(r"D:\\Dataset\\tensor_factorization\\CrossAttention\\checkpoints\\pavia_scale_8\\feature_map_1229\\spatial_attn3_{}.mat".format(epoch), 
+            #                 save_mat)
+            skip_connection_feature_3 = skip_connection_feature_3 * spatial_out_3
+            # spectral attention from lrhsi itself
+            if transformer:
+                avg_channel_4 = self.avg_pool_2d(upsample_feature_3)
+                max_channel_4 = self.max_pool_2d(upsample_feature_3)
+                avg_out_4 = self.fc_4_2(self.relu(self.fc_4_1(avg_channel_4)))
+                max_out_4 = self.fc_4_2(self.relu(self.fc_4_1(max_channel_4)))
+                channel_out_4 = avg_out_4 + max_out_4
+                channel_out_4 = self.sigmoid(channel_out_4)
+                upsample_feature_3 = upsample_feature_3 * channel_out_4
+            else:
+                upsample_feature_3 = ((upsample_feature_3.squeeze().reshape([c, h*w]).T) @ spe_attn_3).T.reshape(c, h, w).unsqueeze(0)
+            # concat the features with spatial attention
+            upsample_feature_3 = self.skip_up_conv_1(
+                torch.cat([upsample_feature_3, skip_connection_feature_3], dim=1)
+            )
+            # if (epoch % 100) == 0:
+            #     # save the feature map
+            #     import scipy.io as sio
+            #     save_mat = {"upsample_feature_3":upsample_feature_3.data.cpu().float().numpy()}
+            #     sio.savemat(r"D:\\Dataset\\tensor_factorization\\CrossAttention\\checkpoints\\pavia_scale_8\\feature_map_1229\\feature_map3_{}.mat".format(epoch), 
+            #                 save_mat)
 
         # upsample 2
         # upsample the feature with spatial attention with itself
-        upsample_feature_2 = self.up_sample_conv_2(upsample_feature_3)
-        # upsample_feature_2 = self.up_sample_conv_2(feature_bottom)
+        if self.scale == 4 :
+            upsample_feature_2 = self.up_sample_conv_2(feature_bottom) # bypass 3rd layers
+        else:
+            upsample_feature_2 = self.up_sample_conv_2(upsample_feature_3)
+        
         skip_connection_feature_2 = self.skip_connection_2(feature_downsample_2)
         # first spatial attention from skip feature
         spatial_avg_out_2 = torch.mean(skip_connection_feature_2, dim=1, keepdim=True)
